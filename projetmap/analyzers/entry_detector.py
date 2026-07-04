@@ -15,6 +15,7 @@ from pathlib import Path
 @dataclass
 class Initialization:
     """A service/component initialized at startup."""
+
     name: str
     line: int
     type: str  # database, auth, provider, router, logger, cache, etc.
@@ -25,6 +26,7 @@ class Initialization:
 @dataclass
 class EntryPoint:
     """An application entry point."""
+
     file: str
     line: int
     language: str
@@ -46,7 +48,11 @@ class EntryDetector:
             (re.compile(r"void\s+main\s*\(\s*\)"), "app", "Flutter/Dart app"),
             (re.compile(r"void\s+main\s*\(\s*\)\s*(?:async|=>)"), "app", "Async Flutter/Dart app"),
             (re.compile(r"runApp\s*\("), "app", "Flutter runApp call"),
-            (re.compile(r"GetMaterialApp\s*\(|MaterialApp\s*\(|CupertinoApp\s*\("), "app", "Flutter app widget"),
+            (
+                re.compile(r"GetMaterialApp\s*\(|MaterialApp\s*\(|CupertinoApp\s*\("),
+                "app",
+                "Flutter app widget",
+            ),
         ],
         "python": [
             # Python entry
@@ -75,7 +81,11 @@ class EntryDetector:
             # Java entry
             (re.compile(r"public\s+static\s+void\s+main\s*\("), "main", "Java main method"),
             (re.compile(r"@SpringBootApplication"), "server", "Spring Boot app"),
-            (re.compile(r"public\s+static\s+void\s+main\s*\(\s*String\s*\["), "main", "Java main with args"),
+            (
+                re.compile(r"public\s+static\s+void\s+main\s*\(\s*String\s*\["),
+                "main",
+                "Java main with args",
+            ),
         ],
         "go": [
             # Go entry
@@ -120,12 +130,30 @@ class EntryDetector:
     # Initialization patterns (what gets started at boot)
     INIT_PATTERNS = [
         # Databases
-        (re.compile(r"(?:Supabase|Firebase|MongoDB|PostgreSQL|MySQL|SQLite)\s*\.?\s*(?:initialize|init|configure|client)"), "database"),
-        (re.compile(r"(?:Drift|Hive|SharedPreferences|GetStorage)\s*\.?\s*(?:open|init)"), "local_storage"),
+        (
+            re.compile(
+                r"(?:Supabase|Firebase|MongoDB|PostgreSQL|MySQL|SQLite)\s*\.?\s*(?:initialize|init|configure|client)"
+            ),
+            "database",
+        ),
+        (
+            re.compile(r"(?:Drift|Hive|SharedPreferences|GetStorage)\s*\.?\s*(?:open|init)"),
+            "local_storage",
+        ),
         # Auth
-        (re.compile(r"(?:Auth|Authentication|Login|Session)\s*\.?\s*(?:initialize|init|configure)"), "auth"),
+        (
+            re.compile(
+                r"(?:Auth|Authentication|Login|Session)\s*\.?\s*(?:initialize|init|configure)"
+            ),
+            "auth",
+        ),
         # State management
-        (re.compile(r"(?:ProviderScope|MultiProvider|BlocProvider|GetBuilder|ChangeNotifierProvider)"), "state_management"),
+        (
+            re.compile(
+                r"(?:ProviderScope|MultiProvider|BlocProvider|GetBuilder|ChangeNotifierProvider)"
+            ),
+            "state_management",
+        ),
         # Router
         (re.compile(r"(?:GoRouter|GoRoute|AutoRoute|Navigator|Router)\s*\("), "router"),
         (re.compile(r"(?:routes|router)\s*[:=]"), "router"),
@@ -228,7 +256,11 @@ class EntryDetector:
         return any(filename == p.lower() for p in patterns)
 
     def _scan_content(
-        self, content: str, file_path: Path, language: str, is_entry_file: bool,
+        self,
+        content: str,
+        file_path: Path,
+        language: str,
+        is_entry_file: bool,
     ) -> list[EntryPoint]:
         """Scan file content for entry point patterns."""
         entry_points = []
@@ -284,13 +316,15 @@ class EntryDetector:
                     # Extract the initialization name
                     init_name = self._extract_init_name(line, init_type)
                     if init_name:
-                        inits.append(Initialization(
-                            name=init_name,
-                            line=i + 1,
-                            type=init_type,
-                            config_refs=self._extract_config_refs(line),
-                            is_async="async" in line or "await" in line,
-                        ))
+                        inits.append(
+                            Initialization(
+                                name=init_name,
+                                line=i + 1,
+                                type=init_type,
+                                config_refs=self._extract_config_refs(line),
+                                is_async="async" in line or "await" in line,
+                            )
+                        )
 
         return inits
 
@@ -304,12 +338,14 @@ class EntryDetector:
             for framework, patterns in self.FRAMEWORK_INIT_PATTERNS.items():
                 for pattern, init_type in patterns:
                     if pattern.search(line):
-                        inits.append(Initialization(
-                            name=init_type,
-                            line=i + 1,
-                            type=f"framework_{framework}",
-                            is_async=False,
-                        ))
+                        inits.append(
+                            Initialization(
+                                name=init_type,
+                                line=i + 1,
+                                type=f"framework_{framework}",
+                                is_async=False,
+                            )
+                        )
 
         return inits
 
@@ -358,7 +394,9 @@ class EntryDetector:
         """Extract configuration references from a line."""
         refs = []
         # Look for env vars
-        env_refs = re.findall(r"(?:Platform\.environment|process\.env|os\.environ)\[['\"](\w+)['\"]\]", line)
+        env_refs = re.findall(
+            r"(?:Platform\.environment|process\.env|os\.environ)\[['\"](\w+)['\"]\]", line
+        )
         refs.extend(env_refs)
         # Look for config references
         config_refs = re.findall(r"(?:config|Config|CONFIG)\s*\.?\s*(\w+)", line)

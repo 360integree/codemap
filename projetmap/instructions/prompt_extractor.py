@@ -20,8 +20,16 @@ class PromptExtractor:
 
     # File extensions that may contain embedded instructions
     CODE_EXTENSIONS = {
-        ".dart", ".py", ".js", ".jsx", ".ts", ".tsx",
-        ".yaml", ".yml", ".json", ".toml",
+        ".dart",
+        ".py",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml",
+        ".json",
+        ".toml",
     }
 
     # Patterns for extracting strings from code
@@ -166,6 +174,7 @@ class PromptExtractor:
     def _extract_json(self, content: str) -> str | None:
         """Extract instruction text from JSON string values."""
         import json
+
         try:
             data = json.loads(content)
         except (json.JSONDecodeError, ValueError):

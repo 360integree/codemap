@@ -71,9 +71,7 @@ class JourneyDetector:
                 journey_steps = self._build_journey_steps(steps, entities, relationships)
 
                 # Phase 5: Score and create journey
-                journey = self._create_journey(
-                    ep, handler, journey_steps, entities
-                )
+                journey = self._create_journey(ep, handler, journey_steps, entities)
                 if journey.confidence >= MIN_CONFIDENCE:
                     all_journeys.append(journey)
 
@@ -119,12 +117,14 @@ class JourneyDetector:
                 reason = "has routes_to incoming"
 
             if score > 0:
-                entry_points.append({
-                    "id": eid,
-                    "entity": entity,
-                    "score": score,
-                    "reason": reason,
-                })
+                entry_points.append(
+                    {
+                        "id": eid,
+                        "entity": entity,
+                        "score": score,
+                        "reason": reason,
+                    }
+                )
 
         return sorted(entry_points, key=lambda x: -x["score"])
 
@@ -164,12 +164,14 @@ class JourneyDetector:
                         and r.get("type") == "calls"
                         for r in relationships
                     )
-                    handlers.append({
-                        "id": eid,
-                        "name": name,
-                        "confidence": 0.8 if has_call else 0.5,
-                        "reason": f"handler pattern: {name}",
-                    })
+                    handlers.append(
+                        {
+                            "id": eid,
+                            "name": name,
+                            "confidence": 0.8 if has_call else 0.5,
+                            "reason": f"handler pattern: {name}",
+                        }
+                    )
                     break
 
         return handlers
@@ -203,13 +205,15 @@ class JourneyDetector:
             entity = entities[node_id]
             out_edge_types = {rtype for _, rtype in adj.get(node_id, [])}
 
-            steps.append({
-                "id": node_id,
-                "entity": entity,
-                "depth": depth,
-                "confidence": conf,
-                "out_edge_types": out_edge_types,
-            })
+            steps.append(
+                {
+                    "id": node_id,
+                    "entity": entity,
+                    "depth": depth,
+                    "confidence": conf,
+                    "out_edge_types": out_edge_types,
+                }
+            )
 
             # Follow call and routes_to edges
             for target, rtype in adj.get(node_id, []):
@@ -230,18 +234,18 @@ class JourneyDetector:
         for raw in raw_steps:
             node_id = raw["id"]
             entity = raw["entity"]
-            step_type = classify_step(
-                node_id, entity, raw.get("out_edge_types", set())
+            step_type = classify_step(node_id, entity, raw.get("out_edge_types", set()))
+            journey_steps.append(
+                JourneyStep(
+                    id=_esc(node_id),
+                    node_id=node_id,
+                    step_type=step_type,
+                    name=entity.get("name", node_id),
+                    file=entity.get("file", ""),
+                    line=entity.get("line", 0),
+                    confidence=raw["confidence"],
+                )
             )
-            journey_steps.append(JourneyStep(
-                id=_esc(node_id),
-                node_id=node_id,
-                step_type=step_type,
-                name=entity.get("name", node_id),
-                file=entity.get("file", ""),
-                line=entity.get("line", 0),
-                confidence=raw["confidence"],
-            ))
         return journey_steps
 
     def _create_journey(
@@ -356,9 +360,7 @@ class JourneyDetector:
 
         return "General"
 
-    def _build_report(
-        self, journeys: list[Journey], entity_count: int
-    ) -> JourneyReport:
+    def _build_report(self, journeys: list[Journey], entity_count: int) -> JourneyReport:
         """Build the final JourneyReport."""
         by_feature: dict[str, int] = defaultdict(int)
         by_step_type: dict[str, int] = defaultdict(int)

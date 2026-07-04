@@ -50,6 +50,7 @@ from projetmap.extractors.config_parser import parse_config
 # Instruction Pipeline (v3)
 try:
     from projetmap.instructions import InstructionGraphBuilder
+
     HAS_INSTRUCTION_PIPELINE = True
 except ImportError:
     HAS_INSTRUCTION_PIPELINE = False
@@ -62,6 +63,7 @@ try:
         EntryDetector,
         TestCoverageScanner,
     )
+
     HAS_RUNTIME_ANALYZERS = True
 except ImportError:
     HAS_RUNTIME_ANALYZERS = False
@@ -71,8 +73,19 @@ OUTPUT_DIR = ".projetmap"
 
 # File extensions that contain instruction/prompt content
 PROMPT_EXTENSIONS = {
-    ".dart", ".py", ".js", ".jsx", ".ts", ".tsx",
-    ".md", ".txt", ".yaml", ".yml", ".json", ".prompt", ".instructions",
+    ".dart",
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".md",
+    ".txt",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".prompt",
+    ".instructions",
 }
 
 
@@ -163,9 +176,7 @@ def collect_prompt_files(
         ignore_patterns = []
 
     files = []
-    search_dirs = [root] if not scan_dirs else [
-        root / d for d in scan_dirs if (root / d).exists()
-    ]
+    search_dirs = [root] if not scan_dirs else [root / d for d in scan_dirs if (root / d).exists()]
 
     for search_dir in search_dirs:
         for path in search_dir.rglob("*"):
@@ -254,14 +265,10 @@ def run_instruction_analysis(
             "total_redundancies": total_redundancies,
             "total_clusters": total_clusters,
             "critical_count": sum(
-                1 for g in all_graphs
-                for r in g.redundancies
-                if r.severity == "critical"
+                1 for g in all_graphs for r in g.redundancies if r.severity == "critical"
             ),
             "high_count": sum(
-                1 for g in all_graphs
-                for r in g.redundancies
-                if r.severity == "high"
+                1 for g in all_graphs for r in g.redundancies if r.severity == "high"
             ),
         },
     }
@@ -317,14 +324,16 @@ def _append_instruction_report(data: dict, report_path: Path):
         if not redundancies:
             continue
 
-        lines.extend([
-            f"### {fname}",
-            "",
-            f"Chunks: {fsummary.get('total_chunks', 0)} | "
-            f"Redundancies: {fsummary.get('total_redundancies', 0)} | "
-            f"Redundancy rate: {fsummary.get('redundancy_rate', 0)}%",
-            "",
-        ])
+        lines.extend(
+            [
+                f"### {fname}",
+                "",
+                f"Chunks: {fsummary.get('total_chunks', 0)} | "
+                f"Redundancies: {fsummary.get('total_redundancies', 0)} | "
+                f"Redundancy rate: {fsummary.get('redundancy_rate', 0)}%",
+                "",
+            ]
+        )
 
         # Most duplicated topics
         most_duped = fsummary.get("most_duplicated_topics", [])
@@ -424,15 +433,27 @@ def run_pipeline(
             config = parse_config(p)
             if config:
                 from projetmap.extractors.base import Entity
-                builder.add_result(type('R', (), {
-                    'entities': [Entity(
-                        id=cf, type="config", name=config.get("name", cf),
-                        file=cf, metadata=config,
-                    )],
-                    'relationships': [],
-                    'imports': [],
-                    'exports': [],
-                })())
+
+                builder.add_result(
+                    type(
+                        "R",
+                        (),
+                        {
+                            "entities": [
+                                Entity(
+                                    id=cf,
+                                    type="config",
+                                    name=config.get("name", cf),
+                                    file=cf,
+                                    metadata=config,
+                                )
+                            ],
+                            "relationships": [],
+                            "imports": [],
+                            "exports": [],
+                        },
+                    )()
+                )
 
     # Detect communities
     G = builder.build_networkx()
@@ -452,12 +473,14 @@ def run_pipeline(
     clusters = []
     for comm_id, members in communities.items():
         name = _community_display_name(comm_id, members, G)
-        clusters.append({
-            "id": comm_id,
-            "name": name,
-            "members": members,  # keep full list; cap display in report only
-            "description": f"{len(members)} entities",
-        })
+        clusters.append(
+            {
+                "id": comm_id,
+                "name": name,
+                "members": members,  # keep full list; cap display in report only
+                "description": f"{len(members)} entities",
+            }
+        )
 
     # If no communities detected, use builder's file-based clusters
     if not clusters:
@@ -467,9 +490,11 @@ def run_pipeline(
     graph_data = builder.to_dict(project_info, clusters, god_nodes, surprising)
 
     # Save outputs
-    print(f"📊 Entities: {graph_data['metadata']['entity_count']}, "
-          f"Relationships: {graph_data['metadata']['relationship_count']}, "
-          f"Clusters: {len(clusters)}")
+    print(
+        f"📊 Entities: {graph_data['metadata']['entity_count']}, "
+        f"Relationships: {graph_data['metadata']['relationship_count']}, "
+        f"Clusters: {len(clusters)}"
+    )
 
     export_json(graph_data, out / "graph.json")
     export_report(graph_data, out / "GRAPH_REPORT.md")
@@ -511,7 +536,7 @@ def query_entity(target: str, entity_name: str, output_dir: str = OUTPUT_DIR):
     for eid, ent in matches:
         print(f"\n🔍 {ent['name']} ({ent['type']})")
         print(f"   File: {ent['file']}")
-        if ent.get('line'):
+        if ent.get("line"):
             print(f"   Line: {ent['line']}")
 
         # Find relationships
@@ -540,6 +565,7 @@ def find_path(target: str, source: str, dest: str, output_dir: str = OUTPUT_DIR)
         return
 
     import networkx as nx
+
     G = nx.DiGraph()
     for r in cached.get("relationships", []):
         G.add_edge(r["source"], r["target"], type=r["type"])
@@ -604,17 +630,21 @@ def run_runtime_analysis(
     config_scanner = ConfigScanner()
     config_report = config_scanner.scan_all(root, files)
     runtime_data["config_surface"] = config_report.to_dict()
-    print(f"     Found {len(config_report.env_vars)} env vars, "
-          f"{len(config_report.feature_flags)} feature flags, "
-          f"{len(config_report.constants)} constants")
+    print(
+        f"     Found {len(config_report.env_vars)} env vars, "
+        f"{len(config_report.feature_flags)} feature flags, "
+        f"{len(config_report.constants)} constants"
+    )
 
     # 3. Test Coverage Analysis
     print("  🧪 Analyzing test coverage...")
     test_scanner = TestCoverageScanner()
     test_report = test_scanner.scan_all(root, files)
     runtime_data["test_coverage"] = test_report.to_dict()
-    print(f"     {len(test_report.test_files)} test files, "
-          f"{len(test_report.untested_modules)} untested modules")
+    print(
+        f"     {len(test_report.test_files)} test files, "
+        f"{len(test_report.untested_modules)} untested modules"
+    )
 
     # 4. Convention Detection
     print("  📏 Detecting conventions...")
@@ -655,12 +685,14 @@ def _append_runtime_report(data: dict, report_path: Path):
     entry_data = data.get("entry_points", {})
     entry_points = entry_data.get("entry_points", [])
     if entry_points:
-        lines.extend([
-            "### Application Entry Points",
-            "",
-            "| File | Line | Type | Initializations |",
-            "|------|------|------|-----------------|",
-        ])
+        lines.extend(
+            [
+                "### Application Entry Points",
+                "",
+                "| File | Line | Type | Initializations |",
+                "|------|------|------|-----------------|",
+            ]
+        )
         for ep in entry_points[:10]:
             inits = ", ".join(i["name"] for i in ep.get("initializations", [])[:5])
             lines.append(
@@ -673,19 +705,21 @@ def _append_runtime_report(data: dict, report_path: Path):
     config_data = data.get("config_surface", {})
     summary = config_data.get("summary", {})
     if summary:
-        lines.extend([
-            "### Configuration Surface",
-            "",
-            "| Type | Count |",
-            "|------|-------|",
-            f"| Environment Variables | {summary.get('total_env_vars', 0)} |",
-            f"| Config Files | {summary.get('total_config_files', 0)} |",
-            f"| Feature Flags | {summary.get('total_feature_flags', 0)} |",
-            f"| Constants | {summary.get('total_constants', 0)} |",
-            f"| API URLs | {summary.get('total_api_urls', 0)} |",
-            f"| Secrets | {summary.get('total_secrets', 0)} |",
-            "",
-        ])
+        lines.extend(
+            [
+                "### Configuration Surface",
+                "",
+                "| Type | Count |",
+                "|------|-------|",
+                f"| Environment Variables | {summary.get('total_env_vars', 0)} |",
+                f"| Config Files | {summary.get('total_config_files', 0)} |",
+                f"| Feature Flags | {summary.get('total_feature_flags', 0)} |",
+                f"| Constants | {summary.get('total_constants', 0)} |",
+                f"| API URLs | {summary.get('total_api_urls', 0)} |",
+                f"| Secrets | {summary.get('total_secrets', 0)} |",
+                "",
+            ]
+        )
 
         # List env vars if any
         env_vars = config_data.get("env_vars", [])
@@ -693,23 +727,27 @@ def _append_runtime_report(data: dict, report_path: Path):
             lines.append("**Environment Variables:**")
             for ev in env_vars[:10]:
                 secret_flag = " 🔒" if ev.get("is_secret") else ""
-                lines.append(f"- `{ev['name']}` (in {ev['file'].split('/')[-1]}:{ev['line']}{secret_flag})")
+                lines.append(
+                    f"- `{ev['name']}` (in {ev['file'].split('/')[-1]}:{ev['line']}{secret_flag})"
+                )
             lines.append("")
 
     # Test Coverage
     test_data = data.get("test_coverage", {})
     test_summary = test_data.get("summary", {})
     if test_summary:
-        lines.extend([
-            "### Test Coverage",
-            "",
-            f"- **Test files**: {test_summary.get('total_test_files', 0)}",
-            f"- **Test cases**: {test_summary.get('total_test_cases', 0)}",
-            f"- **Source files**: {test_summary.get('total_source_files', 0)}",
-            f"- **Coverage**: {test_summary.get('coverage_percentage', 0)}%",
-            f"- **High-risk untested modules**: {test_summary.get('high_risk_modules', 0)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "### Test Coverage",
+                "",
+                f"- **Test files**: {test_summary.get('total_test_files', 0)}",
+                f"- **Test cases**: {test_summary.get('total_test_cases', 0)}",
+                f"- **Source files**: {test_summary.get('total_source_files', 0)}",
+                f"- **Coverage**: {test_summary.get('coverage_percentage', 0)}%",
+                f"- **High-risk untested modules**: {test_summary.get('high_risk_modules', 0)}",
+                "",
+            ]
+        )
 
         # List untested modules
         untested = test_data.get("untested_modules", [])
@@ -722,10 +760,12 @@ def _append_runtime_report(data: dict, report_path: Path):
     # Conventions
     conv_data = data.get("conventions", {})
     if conv_data:
-        lines.extend([
-            "### Codebase Conventions",
-            "",
-        ])
+        lines.extend(
+            [
+                "### Codebase Conventions",
+                "",
+            ]
+        )
 
         file_naming = conv_data.get("file_naming", {})
         if file_naming:
@@ -793,6 +833,7 @@ def run_behavioral_analysis_pipeline(
 
     print(f"  📐 Running {language} behavioral extractor...")
     import tempfile
+
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
         tmp_path = tmp.name
 
@@ -809,6 +850,7 @@ def run_behavioral_analysis_pipeline(
     print("  🔬 Running behavioral analyzers...")
     try:
         from projetmap.behavioral import run_behavioral_analysis
+
         results = run_behavioral_analysis(graph_data, tmp_path)
     except Exception as e:
         print(f"  ❌ Behavioral analysis failed: {e}")
@@ -828,21 +870,23 @@ def run_behavioral_analysis_pipeline(
     # Step 4: Append to report
     _append_behavioral_report(results, out / "GRAPH_REPORT.md")
 
-    summary = results.get('summary', {})
+    summary = results.get("summary", {})
     print(f"\n✅ Behavioral analysis saved to {out}/")
     print("   📄 behavioral_analysis.json")
     print("   📊 GRAPH_REPORT.md (updated)")
-    print(f"   Dead code: {summary.get('dead_functions', 0)} | "
-          f"Hot paths: {summary.get('hot_paths', 0)} | "
-          f"State mutations: {summary.get('total_state_mutations', 0)} | "
-          f"Unpaired listeners: {summary.get('unpaired_listeners', 0)}")
+    print(
+        f"   Dead code: {summary.get('dead_functions', 0)} | "
+        f"Hot paths: {summary.get('hot_paths', 0)} | "
+        f"State mutations: {summary.get('total_state_mutations', 0)} | "
+        f"Unpaired listeners: {summary.get('unpaired_listeners', 0)}"
+    )
 
     return results
 
 
 def _append_behavioral_report(data: dict, report_path: Path):
     """Append behavioral analysis section to the main report."""
-    summary = data.get('summary', {})
+    summary = data.get("summary", {})
     lines = [
         "",
         "---",
@@ -854,16 +898,18 @@ def _append_behavioral_report(data: dict, report_path: Path):
     ]
 
     # ── Dead Code ──
-    dead_code = data.get('dead_code', [])
+    dead_code = data.get("dead_code", [])
     if dead_code:
-        lines.extend([
-            "### Dead Code (Unreachable from Entry Points)",
-            "",
-            f"*{len(dead_code)} functions detected*",
-            "",
-            "| Function | File | Calls Out | Called By |",
-            "|----------|------|-----------|-----------|",
-        ])
+        lines.extend(
+            [
+                "### Dead Code (Unreachable from Entry Points)",
+                "",
+                f"*{len(dead_code)} functions detected*",
+                "",
+                "| Function | File | Calls Out | Called By |",
+                "|----------|------|-----------|-----------|",
+            ]
+        )
         for d in dead_code[:15]:
             lines.append(
                 f"| `{d['function']}` | {d['file'][:40]} | "
@@ -872,94 +918,99 @@ def _append_behavioral_report(data: dict, report_path: Path):
         lines.append("")
 
     # ── Hot Paths ──
-    hot_paths = data.get('hot_paths', [])
+    hot_paths = data.get("hot_paths", [])
     if hot_paths:
-        lines.extend([
-            "### Hot Paths (Most-Called Functions)",
-            "",
-            "| Function | File | Callers |",
-            "|----------|------|---------|",
-        ])
+        lines.extend(
+            [
+                "### Hot Paths (Most-Called Functions)",
+                "",
+                "| Function | File | Callers |",
+                "|----------|------|---------|",
+            ]
+        )
         for h in hot_paths[:10]:
-            lines.append(
-                f"| `{h['function']}` | {h['file'][:40]} | {h['callers']} |"
-            )
+            lines.append(f"| `{h['function']}` | {h['file'][:40]} | {h['callers']} |")
         lines.append("")
 
     # ── Call Depth ──
-    call_depth = data.get('call_depth', [])
+    call_depth = data.get("call_depth", [])
     if call_depth:
-        lines.extend([
-            "### Deepest Call Chains",
-            "",
-            "| Function | File | Depth |",
-            "|----------|------|-------|",
-        ])
+        lines.extend(
+            [
+                "### Deepest Call Chains",
+                "",
+                "| Function | File | Depth |",
+                "|----------|------|-------|",
+            ]
+        )
         for d in call_depth[:5]:
-            lines.append(
-                f"| `{d['function']}` | {d['file'][:40]} | {d['depth']} |"
-            )
+            lines.append(f"| `{d['function']}` | {d['file'][:40]} | {d['depth']} |")
         lines.append("")
 
     # ── State Mutation Hotspots ──
-    hotspots = data.get('mutation_hotspots', [])
+    hotspots = data.get("mutation_hotspots", [])
     if hotspots:
-        lines.extend([
-            "### State Mutation Hotspots",
-            "",
-            "| Class | Mutations | Risk | Breakdown |",
-            "|-------|-----------|------|-----------|",
-        ])
+        lines.extend(
+            [
+                "### State Mutation Hotspots",
+                "",
+                "| Class | Mutations | Risk | Breakdown |",
+                "|-------|-----------|------|-----------|",
+            ]
+        )
         for h in hotspots[:10]:
-            breakdown = ", ".join(f"{k}:{v}" for k, v in h['breakdown'].items())
-            lines.append(
-                f"| `{h['class']}` | {h['mutations']} | "
-                f"{h['risk']} | {breakdown[:50]} |"
-            )
+            breakdown = ", ".join(f"{k}:{v}" for k, v in h["breakdown"].items())
+            lines.append(f"| `{h['class']}` | {h['mutations']} | {h['risk']} | {breakdown[:50]} |")
         lines.append("")
 
     # ── Unpaired Listeners (Memory Leaks) ──
-    unpaired = data.get('unpaired_listeners', [])
+    unpaired = data.get("unpaired_listeners", [])
     if unpaired:
-        problematic = [u for u in unpaired if u['unpaired'] > 0]
-        lines.extend([
-            "### Listener Health",
-            "",
-        ])
-        if problematic:
-            lines.extend([
-                f"⚠️ **{len(problematic)} components with unpaired listeners** (potential memory leaks):",
+        problematic = [u for u in unpaired if u["unpaired"] > 0]
+        lines.extend(
+            [
+                "### Listener Health",
                 "",
-                "| Component | Added | Removed | Unpaired |",
-                "|-----------|-------|---------|----------|",
-            ])
+            ]
+        )
+        if problematic:
+            lines.extend(
+                [
+                    f"⚠️ **{len(problematic)} components with unpaired listeners** (potential memory leaks):",
+                    "",
+                    "| Component | Added | Removed | Unpaired |",
+                    "|-----------|-------|---------|----------|",
+                ]
+            )
             for u in problematic:
-                name = u.get('component', u.get('widget', ''))
+                name = u.get("component", u.get("widget", ""))
                 lines.append(
                     f"| `{name}` | {u['listeners_added']} | "
                     f"{u['listeners_removed']} | {u['unpaired']} |"
                 )
             lines.append("")
 
-        paired = [u for u in unpaired if u['unpaired'] == 0]
+        paired = [u for u in unpaired if u["unpaired"] == 0]
         if paired:
             lines.append(f"✅ {len(paired)} components with properly paired listeners.")
         lines.append("")
 
     # ── Lifecycle Summary ──
-    lc = data.get('lifecycle_summary', {})
+    lc = data.get("lifecycle_summary", {})
     if lc:
-        lines.extend([
-            "### Component Lifecycle Summary",
-            "",
-            f"- Total components: {lc.get('total_components', lc.get('total_widgets', 0))}",
-            f"- Init hooks: {lc.get('with_init', lc.get('with_initState', 0))}",
-            f"- Dispose hooks: {lc.get('with_dispose', 0)}",
-            f"- Update hooks: {lc.get('with_update', lc.get('with_didChangeDependencies', 0))}",
-            f"- Build/render hooks: {lc.get('with_build', 0)}",
-            f"- State change hooks: {lc.get('with_state_change', 0)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "### Component Lifecycle Summary",
+                "",
+                f"- Total components: {lc.get('total_components', lc.get('total_widgets', 0))}",
+                f"- Init hooks: {lc.get('with_init', lc.get('with_initState', 0))}",
+                f"- Dispose hooks: {lc.get('with_dispose', 0)}",
+                f"- Update hooks: {lc.get('with_update', lc.get('with_didChangeDependencies', 0))}",
+                f"- Build/render hooks: {lc.get('with_build', 0)}",
+                f"- State change hooks: {lc.get('with_state_change', 0)}",
+                "",
+            ]
+        )
 
     # Append to report
     existing = ""
@@ -1016,8 +1067,7 @@ def run_journey_analysis(
     print("   📄 user_journeys.json")
     print("   🌐 user_journeys.html")
     print("   📊 USER_JOURNEYS.md")
-    print(f"   Journeys: {summary['total_journeys']} | "
-          f"Features: {len(summary['by_feature'])}")
+    print(f"   Journeys: {summary['total_journeys']} | Features: {len(summary['by_feature'])}")
 
     return report.to_dict()
 
@@ -1030,34 +1080,34 @@ def _append_journey_report(report, report_path: Path):
         "",
         "## User Journeys",
         "",
-        f"*{report.total_journeys} journeys discovered across "
-        f"{len(report.by_feature)} features*",
+        f"*{report.total_journeys} journeys discovered across {len(report.by_feature)} features*",
         "",
     ]
 
     # Summary table
     if report.by_feature:
-        lines.extend([
-            "| Feature | Journeys |",
-            "|---------|----------|",
-        ])
+        lines.extend(
+            [
+                "| Feature | Journeys |",
+                "|---------|----------|",
+            ]
+        )
         for feature, count in sorted(report.by_feature.items(), key=lambda x: -x[1]):
             lines.append(f"| {feature} | {count} |")
         lines.append("")
 
     # Top journeys by confidence
     if report.journeys:
-        lines.extend([
-            "### Top Journeys",
-            "",
-            "| Journey | Feature | Steps | Confidence |",
-            "|---------|---------|-------|------------|",
-        ])
+        lines.extend(
+            [
+                "### Top Journeys",
+                "",
+                "| Journey | Feature | Steps | Confidence |",
+                "|---------|---------|-------|------------|",
+            ]
+        )
         for j in sorted(report.journeys, key=lambda j: -j.confidence)[:15]:
-            lines.append(
-                f"| {j.name} | {j.feature} | {len(j.steps)} | "
-                f"{j.confidence:.0%} |"
-            )
+            lines.append(f"| {j.name} | {j.feature} | {len(j.steps)} | {j.confidence:.0%} |")
         lines.append("")
 
     # Append to report
@@ -1191,7 +1241,11 @@ def uninstall():
 # IDE MCP config paths
 MCP_CONFIG_PATHS = {
     "cursor": Path.home() / ".cursor" / "mcp.json",
-    "claude": Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
+    "claude": Path.home()
+    / "Library"
+    / "Application Support"
+    / "Claude"
+    / "claude_desktop_config.json",
     "windsurf": Path.home() / ".codeium" / "windsurf" / "mcp.json",
     "zcode": Path.home() / ".zcode" / "mcp.json",
 }
@@ -1200,12 +1254,14 @@ MCP_CONFIG_PATHS = {
 def get_python_path() -> str:
     """Get current Python executable path."""
     import sys
+
     return sys.executable
 
 
 def get_project_path() -> str:
     """Get projetmap project path."""
     import projetmap
+
     return str(Path(projetmap.__file__).parent.parent)
 
 
@@ -1222,9 +1278,7 @@ def generate_mcp_config(python_path: str, project_path: str) -> dict:
     return {
         "command": python_path,
         "args": ["-m", "projetmap", "mcp"],
-        "env": {
-            "PYTHONPATH": project_path
-        }
+        "env": {"PYTHONPATH": project_path},
     }
 
 
@@ -1338,52 +1392,68 @@ def main():
     parser = argparse.ArgumentParser(
         description="Codemap — Knowledge graph generator for codebases"
     )
-    parser.add_argument("target", nargs="?", default=".",
-                        help="Target directory to scan")
-    parser.add_argument("--refresh", action="store_true",
-                        help="Force re-scan (ignore cache)")
-    parser.add_argument("--json", action="store_true",
-                        help="Output only graph.json")
-    parser.add_argument("--report", action="store_true",
-                        help="Output only GRAPH_REPORT.md")
-    parser.add_argument("--html", action="store_true",
-                        help="Output only graph.html")
-    parser.add_argument("--mermaid", action="store_true",
-                        help="Output only Mermaid diagram")
-    parser.add_argument("--ast-only", action="store_true",
-                        help="AST-only extraction (no LLM)")
-    parser.add_argument("--scan-dirs", nargs="*",
-                        help="Directories to scan (default: all)")
-    parser.add_argument("--ignore", nargs="*",
-                        help="Additional patterns to ignore")
-    parser.add_argument("--output", default=OUTPUT_DIR,
-                        help=f"Output directory (default: {OUTPUT_DIR})")
-    parser.add_argument("--query", metavar="ENTITY",
-                        help="Query a specific entity")
-    parser.add_argument("--path", nargs=2, metavar=("SOURCE", "DEST"),
-                        help="Find path between two entities")
-    parser.add_argument("--analyze-prompts", action="store_true",
-                        help="Analyze instruction files for redundancies")
-    parser.add_argument("--prompt-file", metavar="FILE",
-                        help="Analyze a specific prompt/instruction file")
-    parser.add_argument("--runtime-analysis", action="store_true",
-                        help="Run universal runtime analysis")
-    parser.add_argument("--behavioral", action="store_true",
-                        help="Run behavioral analysis (call graph, state flow, dead code)")
-    parser.add_argument("--journeys", action="store_true",
-                        help="Run user journey detection")
-    parser.add_argument("--install-skill", action="store_true",
-                        help="Install ZCode skill to ~/.agents/skills/projetmap/")
-    parser.add_argument("--uninstall-skill", action="store_true",
-                        help="Uninstall ZCode skill from ~/.agents/skills/projetmap/")
-    parser.add_argument("--install-mcp", nargs="?", const="auto", default=None,
-                        metavar="IDE",
-                        help="Install MCP config for IDE (auto|cursor|claude|windsurf|zcode)")
-    parser.add_argument("--uninstall-mcp", nargs="?", const="auto", default=None,
-                        metavar="IDE",
-                        help="Uninstall MCP config from IDE (auto|cursor|claude|windsurf|zcode)")
-    parser.add_argument("--uninstall", action="store_true",
-                        help="Uninstall projetmap completely (skill + MCP + pip)")
+    parser.add_argument("target", nargs="?", default=".", help="Target directory to scan")
+    parser.add_argument("--refresh", action="store_true", help="Force re-scan (ignore cache)")
+    parser.add_argument("--json", action="store_true", help="Output only graph.json")
+    parser.add_argument("--report", action="store_true", help="Output only GRAPH_REPORT.md")
+    parser.add_argument("--html", action="store_true", help="Output only graph.html")
+    parser.add_argument("--mermaid", action="store_true", help="Output only Mermaid diagram")
+    parser.add_argument("--ast-only", action="store_true", help="AST-only extraction (no LLM)")
+    parser.add_argument("--scan-dirs", nargs="*", help="Directories to scan (default: all)")
+    parser.add_argument("--ignore", nargs="*", help="Additional patterns to ignore")
+    parser.add_argument(
+        "--output", default=OUTPUT_DIR, help=f"Output directory (default: {OUTPUT_DIR})"
+    )
+    parser.add_argument("--query", metavar="ENTITY", help="Query a specific entity")
+    parser.add_argument(
+        "--path", nargs=2, metavar=("SOURCE", "DEST"), help="Find path between two entities"
+    )
+    parser.add_argument(
+        "--analyze-prompts", action="store_true", help="Analyze instruction files for redundancies"
+    )
+    parser.add_argument(
+        "--prompt-file", metavar="FILE", help="Analyze a specific prompt/instruction file"
+    )
+    parser.add_argument(
+        "--runtime-analysis", action="store_true", help="Run universal runtime analysis"
+    )
+    parser.add_argument(
+        "--behavioral",
+        action="store_true",
+        help="Run behavioral analysis (call graph, state flow, dead code)",
+    )
+    parser.add_argument("--journeys", action="store_true", help="Run user journey detection")
+    parser.add_argument(
+        "--install-skill",
+        action="store_true",
+        help="Install ZCode skill to ~/.agents/skills/projetmap/",
+    )
+    parser.add_argument(
+        "--uninstall-skill",
+        action="store_true",
+        help="Uninstall ZCode skill from ~/.agents/skills/projetmap/",
+    )
+    parser.add_argument(
+        "--install-mcp",
+        nargs="?",
+        const="auto",
+        default=None,
+        metavar="IDE",
+        help="Install MCP config for IDE (auto|cursor|claude|windsurf|zcode)",
+    )
+    parser.add_argument(
+        "--uninstall-mcp",
+        nargs="?",
+        const="auto",
+        default=None,
+        metavar="IDE",
+        help="Uninstall MCP config from IDE (auto|cursor|claude|windsurf|zcode)",
+    )
+    parser.add_argument(
+        "--uninstall",
+        action="store_true",
+        help="Uninstall projetmap completely (skill + MCP + pip)",
+    )
 
     args = parser.parse_args()
 
@@ -1463,16 +1533,19 @@ def main():
         print(json.dumps(graph_data, indent=2))
     elif args.report:
         from projetmap.exporters.report_exporter import export_report
+
         out = get_project_root(args.target) / args.output
         export_report(graph_data, out / "GRAPH_REPORT.md")
         print(f"📄 Report: {out}/GRAPH_REPORT.md")
     elif args.html:
         from projetmap.exporters.html_exporter import export_html
+
         out = get_project_root(args.target) / args.output
         export_html(graph_data, out / "graph.html")
         print(f"🌐 HTML: {out}/graph.html")
     elif args.mermaid:
         from projetmap.exporters.mermaid_exporter import export_mermaid
+
         out = get_project_root(args.target) / args.output
         export_mermaid(graph_data, out / "graph.mermaid")
         print(f"📐 Mermaid: {out}/graph.mermaid")

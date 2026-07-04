@@ -18,6 +18,7 @@ from pathlib import Path
 @dataclass
 class ConventionReport:
     """Complete convention analysis report."""
+
     file_naming: dict = field(default_factory=dict)
     class_naming: dict = field(default_factory=dict)
     directory_structure: dict = field(default_factory=dict)
@@ -54,8 +55,12 @@ class ConventionDetector:
 
     # Class/type naming patterns
     CLASS_NAMING_PATTERNS = {
-        "PascalCase": re.compile(r"(?:class|struct|enum|interface|type|typedef)\s+([A-Z][a-zA-Z0-9]*)"),
-        "snake_case": re.compile(r"(?:class|struct|enum|interface|type|typedef)\s+([a-z][a-z0-9_]*)"),
+        "PascalCase": re.compile(
+            r"(?:class|struct|enum|interface|type|typedef)\s+([A-Z][a-zA-Z0-9]*)"
+        ),
+        "snake_case": re.compile(
+            r"(?:class|struct|enum|interface|type|typedef)\s+([a-z][a-z0-9_]*)"
+        ),
         "I_Prefix": re.compile(r"(?:class|interface|type)\s+(I[A-Z][a-zA-Z0-9]*)"),
         "_Prefix": re.compile(r"(?:class|struct)\s+(_[A-Z][a-zA-Z0-9]*)"),
     }
@@ -109,7 +114,15 @@ class ConventionDetector:
             "dirs": ["controllers", "services", "repositories", "models", "views"],
         },
         "clean_architecture": {
-            "signals": ["entities", "use_cases", "interface_adapters", "frameworks", "domain", "data", "presentation"],
+            "signals": [
+                "entities",
+                "use_cases",
+                "interface_adapters",
+                "frameworks",
+                "domain",
+                "data",
+                "presentation",
+            ],
             "dirs": ["domain", "data", "presentation", "core"],
         },
         "feature_based": {
@@ -234,9 +247,7 @@ class ConventionDetector:
         report.class_naming = self._analyze_class_naming(class_names)
 
         # Analyze directory structure
-        report.directory_structure = self._analyze_directory_structure(
-            directory_depth, root, files
-        )
+        report.directory_structure = self._analyze_directory_structure(directory_depth, root, files)
 
         # Analyze import style
         report.import_style = dict(import_styles)
@@ -312,7 +323,10 @@ class ConventionDetector:
         }
 
     def _analyze_directory_structure(
-        self, depth_counts: dict, root: Path, files: list[Path],
+        self,
+        depth_counts: dict,
+        root: Path,
+        files: list[Path],
     ) -> dict:
         """Analyze directory structure patterns."""
         # Get top-level directories
@@ -355,7 +369,10 @@ class ConventionDetector:
         }
 
     def _detect_architecture(
-        self, dir_counts: dict, class_names: list[tuple], frameworks: set[str],
+        self,
+        dir_counts: dict,
+        class_names: list[tuple],
+        frameworks: set[str],
     ) -> str | None:
         """Detect architectural pattern."""
         all_dirs = " ".join(dir_counts.keys()).lower()

@@ -16,6 +16,7 @@ from .prompt_extractor import PromptExtractor
 @dataclass
 class InstructionGraph:
     """The complete instruction analysis result."""
+
     source_file: str
     chunks: list[ClassifiedChunk] = field(default_factory=list)
     redundancies: list[Redundancy] = field(default_factory=list)
@@ -30,7 +31,9 @@ class InstructionGraph:
             "chunks": [
                 {
                     "id": cc.chunk.id,
-                    "text": cc.chunk.text[:200] + "..." if len(cc.chunk.text) > 200 else cc.chunk.text,
+                    "text": cc.chunk.text[:200] + "..."
+                    if len(cc.chunk.text) > 200
+                    else cc.chunk.text,
                     "line_range": [cc.chunk.line_start, cc.chunk.line_end],
                     "heading": cc.chunk.heading,
                     "heading_level": cc.chunk.heading_level,
@@ -141,7 +144,8 @@ class InstructionGraphBuilder:
         )
 
     def _build_summary(
-        self, source_file: str,
+        self,
+        source_file: str,
         chunks: list[ClassifiedChunk],
         redundancies: list[Redundancy],
         clusters: list[RedundancyCluster],
@@ -196,9 +200,7 @@ class InstructionGraphBuilder:
             "redundancy_severity": redundancy_severity,
             "total_clusters": len(clusters),
             "topics_covered": sorted(all_topics),
-            "most_duplicated_topics": [
-                {"topic": t, "chunk_count": c} for t, c in most_duplicated
-            ],
+            "most_duplicated_topics": [{"topic": t, "chunk_count": c} for t, c in most_duplicated],
             "redundancy_rate": round(
                 len(redundancies) / total_chunks * 100 if total_chunks > 0 else 0, 1
             ),

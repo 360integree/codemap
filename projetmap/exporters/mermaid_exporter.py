@@ -76,15 +76,17 @@ def export_mermaid(graph_data: dict, output_path: Path) -> Path:
             lines.append(f'    {src} -->|"{label}"| {tgt}')
 
     # Add styles
-    lines.extend([
-        "",
-        "    classDef module fill:#1f6feb,stroke:#58a6ff,color:#fff",
-        "    classDef class fill:#238636,stroke:#3fb950,color:#fff",
-        "    classDef function fill:#8957e5,stroke:#d2a8ff,color:#fff",
-        "    classDef route fill:#9e6a03,stroke:#f0883e,color:#fff",
-        "    classDef schema fill:#bf3989,stroke:#f778ba,color:#fff",
-        "    classDef config fill:#484f58,stroke:#8b949e,color:#fff",
-    ])
+    lines.extend(
+        [
+            "",
+            "    classDef module fill:#1f6feb,stroke:#58a6ff,color:#fff",
+            "    classDef class fill:#238636,stroke:#3fb950,color:#fff",
+            "    classDef function fill:#8957e5,stroke:#d2a8ff,color:#fff",
+            "    classDef route fill:#9e6a03,stroke:#f0883e,color:#fff",
+            "    classDef schema fill:#bf3989,stroke:#f778ba,color:#fff",
+            "    classDef config fill:#484f58,stroke:#8b949e,color:#fff",
+        ]
+    )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:

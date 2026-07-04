@@ -16,6 +16,7 @@ from .classifier import ClassifiedChunk, IntentType
 @dataclass
 class Redundancy:
     """A detected redundancy between two instruction chunks."""
+
     chunk_a_id: str
     chunk_b_id: str
     type: str  # topic_collision, scope_conflict, semantic_duplicate, contradiction
@@ -35,6 +36,7 @@ class Redundancy:
 @dataclass
 class RedundancyCluster:
     """A group of chunks that are all redundant with each other."""
+
     id: str
     chunk_ids: set[str] = field(default_factory=set)
     topic: str = ""
@@ -52,7 +54,8 @@ class OverlapDetector:
     HIGH_SIMILARITY_THRESHOLD = 0.80  # High similarity threshold
 
     def detect_all(
-        self, classified_chunks: list[ClassifiedChunk],
+        self,
+        classified_chunks: list[ClassifiedChunk],
     ) -> tuple[list[Redundancy], list[RedundancyCluster]]:
         """Run all detection strategies and return results."""
         redundancies = []
@@ -87,7 +90,8 @@ class OverlapDetector:
         return unique, clusters
 
     def _detect_topic_collisions(
-        self, chunks: list[ClassifiedChunk],
+        self,
+        chunks: list[ClassifiedChunk],
     ) -> list[Redundancy]:
         """Detect chunks with same topic + same intent = redundancy."""
         redundancies = []
@@ -115,20 +119,23 @@ class OverlapDetector:
                         if shared == {"inquiry"} or shared >= {"inquiry", "education"}:
                             severity = "high"
 
-                        redundancies.append(Redundancy(
-                            chunk_a_id=a.chunk.id,
-                            chunk_b_id=b.chunk.id,
-                            type="topic_collision",
-                            severity=severity,
-                            shared_topics=shared,
-                            evidence=f"Both {intent.value} about {', '.join(sorted(shared))}",
-                            recommendation=f"Consolidate into single {intent.value} with lifecycle scope guards",
-                        ))
+                        redundancies.append(
+                            Redundancy(
+                                chunk_a_id=a.chunk.id,
+                                chunk_b_id=b.chunk.id,
+                                type="topic_collision",
+                                severity=severity,
+                                shared_topics=shared,
+                                evidence=f"Both {intent.value} about {', '.join(sorted(shared))}",
+                                recommendation=f"Consolidate into single {intent.value} with lifecycle scope guards",
+                            )
+                        )
 
         return redundancies
 
     def _detect_scope_conflicts(
-        self, chunks: list[ClassifiedChunk],
+        self,
+        chunks: list[ClassifiedChunk],
     ) -> list[Redundancy]:
         """Detect same mandate applied to different scopes = potential conflict."""
         redundancies = []
@@ -156,20 +163,23 @@ class OverlapDetector:
                     if scopes_a and scopes_b and not scopes_a.intersection(scopes_b):
                         # Completely disjoint scopes - might conflict
                         # Example: "ALWAYS ask age" (global) vs "NEVER ask age for settled" (settled)
-                        redundancies.append(Redundancy(
-                            chunk_a_id=a.chunk.id,
-                            chunk_b_id=b.chunk.id,
-                            type="scope_conflict",
-                            severity="medium",
-                            shared_topics={topic},
-                            evidence=f"Scope conflict: {scopes_a} vs {scopes_b} on '{topic}'",
-                            recommendation=f"Add scope guard to disambiguate: '{topic}' applies to {scopes_a} but not {scopes_b}",
-                        ))
+                        redundancies.append(
+                            Redundancy(
+                                chunk_a_id=a.chunk.id,
+                                chunk_b_id=b.chunk.id,
+                                type="scope_conflict",
+                                severity="medium",
+                                shared_topics={topic},
+                                evidence=f"Scope conflict: {scopes_a} vs {scopes_b} on '{topic}'",
+                                recommendation=f"Add scope guard to disambiguate: '{topic}' applies to {scopes_a} but not {scopes_b}",
+                            )
+                        )
 
         return redundancies
 
     def _detect_semantic_duplicates(
-        self, chunks: list[ClassifiedChunk],
+        self,
+        chunks: list[ClassifiedChunk],
     ) -> list[Redundancy]:
         """Detect reworded duplicates using keyword-based similarity."""
         redundancies = []
@@ -197,21 +207,24 @@ class OverlapDetector:
                 if similarity >= self.SEMANTIC_SIMILARITY_THRESHOLD:
                     severity = "high" if similarity >= self.HIGH_SIMILARITY_THRESHOLD else "medium"
 
-                    redundancies.append(Redundancy(
-                        chunk_a_id=cc_a.chunk.id,
-                        chunk_b_id=cc_b.chunk.id,
-                        type="semantic_duplicate",
-                        severity=severity,
-                        shared_topics=cc_a.chunk.topics & cc_b.chunk.topics,
-                        evidence=f"Keyword similarity: {similarity:.0%} ({len(intersection)} shared keywords)",
-                        recommendation="Consolidate into single instruction or cross-reference",
-                        similarity_score=similarity,
-                    ))
+                    redundancies.append(
+                        Redundancy(
+                            chunk_a_id=cc_a.chunk.id,
+                            chunk_b_id=cc_b.chunk.id,
+                            type="semantic_duplicate",
+                            severity=severity,
+                            shared_topics=cc_a.chunk.topics & cc_b.chunk.topics,
+                            evidence=f"Keyword similarity: {similarity:.0%} ({len(intersection)} shared keywords)",
+                            recommendation="Consolidate into single instruction or cross-reference",
+                            similarity_score=similarity,
+                        )
+                    )
 
         return redundancies
 
     def _detect_contradictions(
-        self, chunks: list[ClassifiedChunk],
+        self,
+        chunks: list[ClassifiedChunk],
     ) -> list[Redundancy]:
         """Detect instructions that contradict each other."""
         redundancies = []
@@ -221,23 +234,27 @@ class OverlapDetector:
                 a, b = chunks[i], chunks[j]
 
                 # Same topic, one says "always" other says "never skip" = potential conflict
-                if (a.primary_intent == IntentType.MANDATE and
-                    b.primary_intent == IntentType.MANDATE):
+                if (
+                    a.primary_intent == IntentType.MANDATE
+                    and b.primary_intent == IntentType.MANDATE
+                ):
                     shared = a.chunk.topics & b.chunk.topics
                     if shared:
                         # Check for conflicting scope
                         scopes_a = a.chunk.scope_tags - {"global", "turn_specific"}
                         scopes_b = b.chunk.scope_tags - {"global", "turn_specific"}
                         if scopes_a and scopes_b and not scopes_a.intersection(scopes_b):
-                            redundancies.append(Redundancy(
-                                chunk_a_id=a.chunk.id,
-                                chunk_b_id=b.chunk.id,
-                                type="contradiction",
-                                severity="high",
-                                shared_topics=shared,
-                                evidence=f"Conflicting mandates for different scopes: {scopes_a} vs {scopes_b}",
-                                recommendation="Add scope guards to disambiguate",
-                            ))
+                            redundancies.append(
+                                Redundancy(
+                                    chunk_a_id=a.chunk.id,
+                                    chunk_b_id=b.chunk.id,
+                                    type="contradiction",
+                                    severity="high",
+                                    shared_topics=shared,
+                                    evidence=f"Conflicting mandates for different scopes: {scopes_a} vs {scopes_b}",
+                                    recommendation="Add scope guards to disambiguate",
+                                )
+                            )
 
         return redundancies
 
@@ -278,7 +295,9 @@ class OverlapDetector:
     def _get_polarity(self, text: str) -> str:
         """Get the polarity (positive/negative) of an instruction."""
         negative = bool(re.search(r"\b(never|do not|must not|skip|avoid)\b", text, re.IGNORECASE))
-        positive = bool(re.search(r"\b(always|must|required|mandatory|include|ask)\b", text, re.IGNORECASE))
+        positive = bool(
+            re.search(r"\b(always|must|required|mandatory|include|ask)\b", text, re.IGNORECASE)
+        )
         if negative:
             return "negative"
         if positive:
@@ -289,21 +308,137 @@ class OverlapDetector:
         """Extract meaningful keywords from text for similarity comparison."""
         # Remove common stop words and short words
         stop_words = {
-            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-            "have", "has", "had", "do", "does", "did", "will", "would", "could",
-            "should", "may", "might", "can", "shall", "to", "of", "in", "for",
-            "on", "with", "at", "by", "from", "as", "into", "through", "during",
-            "before", "after", "above", "below", "between", "out", "off", "over",
-            "under", "again", "further", "then", "once", "here", "there", "when",
-            "where", "why", "how", "all", "each", "every", "both", "few", "more",
-            "most", "other", "some", "such", "no", "nor", "not", "only", "own",
-            "same", "so", "than", "too", "very", "just", "because", "but", "and",
-            "or", "if", "while", "that", "this", "these", "those", "it", "its",
-            "you", "your", "yours", "we", "our", "ours", "they", "their", "theirs",
-            "what", "which", "who", "whom", "whose", "i", "me", "my", "mine",
-            "also", "about", "up", "down", "still", "already", "yet", "ever",
-            "let", "make", "sure", "must", "should", "need", "use", "like",
-            "want", "going", "get", "got", "take", "see", "know", "think",
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "can",
+            "shall",
+            "to",
+            "of",
+            "in",
+            "for",
+            "on",
+            "with",
+            "at",
+            "by",
+            "from",
+            "as",
+            "into",
+            "through",
+            "during",
+            "before",
+            "after",
+            "above",
+            "below",
+            "between",
+            "out",
+            "off",
+            "over",
+            "under",
+            "again",
+            "further",
+            "then",
+            "once",
+            "here",
+            "there",
+            "when",
+            "where",
+            "why",
+            "how",
+            "all",
+            "each",
+            "every",
+            "both",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "no",
+            "nor",
+            "not",
+            "only",
+            "own",
+            "same",
+            "so",
+            "than",
+            "too",
+            "very",
+            "just",
+            "because",
+            "but",
+            "and",
+            "or",
+            "if",
+            "while",
+            "that",
+            "this",
+            "these",
+            "those",
+            "it",
+            "its",
+            "you",
+            "your",
+            "yours",
+            "we",
+            "our",
+            "ours",
+            "they",
+            "their",
+            "theirs",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "whose",
+            "i",
+            "me",
+            "my",
+            "mine",
+            "also",
+            "about",
+            "up",
+            "down",
+            "still",
+            "already",
+            "yet",
+            "ever",
+            "let",
+            "make",
+            "sure",
+            "must",
+            "should",
+            "need",
+            "use",
+            "like",
+            "want",
+            "going",
+            "get",
+            "got",
+            "take",
+            "see",
+            "know",
+            "think",
         }
 
         # Tokenize
@@ -315,7 +450,9 @@ class OverlapDetector:
         return keywords
 
     def _cluster_redundancies(
-        self, redundancies: list[Redundancy], chunks: list[ClassifiedChunk],
+        self,
+        redundancies: list[Redundancy],
+        chunks: list[ClassifiedChunk],
     ) -> list[RedundancyCluster]:
         """Group redundancies into clusters of mutually redundant chunks."""
         if not redundancies:
@@ -363,15 +500,18 @@ class OverlapDetector:
 
             # Calculate average similarity
             similarities = [
-                r.similarity_score for r in redundancies
-                if r.chunk_a_id in cluster_members and r.chunk_b_id in cluster_members
+                r.similarity_score
+                for r in redundancies
+                if r.chunk_a_id in cluster_members
+                and r.chunk_b_id in cluster_members
                 and r.similarity_score > 0
             ]
             avg_sim = sum(similarities) / len(similarities) if similarities else 0.0
 
             # Determine cluster severity
             severities = [
-                r.severity for r in redundancies
+                r.severity
+                for r in redundancies
                 if r.chunk_a_id in cluster_members and r.chunk_b_id in cluster_members
             ]
             if "critical" in severities:
@@ -381,13 +521,15 @@ class OverlapDetector:
             else:
                 severity = "medium"
 
-            clusters.append(RedundancyCluster(
-                id=f"cluster_{len(clusters)}",
-                chunk_ids=cluster_members,
-                topic=dominant_topic,
-                avg_similarity=avg_sim,
-                severity=severity,
-                recommendation=f"Consolidate {len(cluster_members)} chunks about '{dominant_topic}' into single source of truth",
-            ))
+            clusters.append(
+                RedundancyCluster(
+                    id=f"cluster_{len(clusters)}",
+                    chunk_ids=cluster_members,
+                    topic=dominant_topic,
+                    avg_similarity=avg_sim,
+                    severity=severity,
+                    recommendation=f"Consolidate {len(cluster_members)} chunks about '{dominant_topic}' into single source of truth",
+                )
+            )
 
         return clusters

@@ -16,6 +16,7 @@ from pathlib import Path
 @dataclass
 class ConfigItem:
     """A configuration item detected in the codebase."""
+
     name: str
     type: str  # env_var, config_file, feature_flag, constant, api_url, secret
     file: str
@@ -31,6 +32,7 @@ class ConfigItem:
 @dataclass
 class ConfigReport:
     """Complete configuration analysis report."""
+
     env_vars: list[ConfigItem] = field(default_factory=list)
     config_files: list[ConfigItem] = field(default_factory=list)
     feature_flags: list[ConfigItem] = field(default_factory=list)
@@ -151,32 +153,59 @@ class ConfigScanner:
     # Feature flag patterns
     FEATURE_FLAG_PATTERNS = [
         # Boolean variables with ENABLE/DISABLE/DEBUG/FEATURE prefix
-        (re.compile(r"(?:const|final|static|let|var)\s+(?:bool\s+)?(ENABLE_\w+|DISABLE_\w+|DEBUG_\w+|FEATURE_\w+|IS_\w+_ENABLED)\s*=\s*(true|false)", re.IGNORECASE), "bool"),
+        (
+            re.compile(
+                r"(?:const|final|static|let|var)\s+(?:bool\s+)?(ENABLE_\w+|DISABLE_\w+|DEBUG_\w+|FEATURE_\w+|IS_\w+_ENABLED)\s*=\s*(true|false)",
+                re.IGNORECASE,
+            ),
+            "bool",
+        ),
         # Feature flags object/class
         (re.compile(r"(?:FeatureFlags?|FeatureToggles?|FeatureSwitches?)\s*[\.\{]"), "class"),
         # Conditional checks
-        (re.compile(r"if\s*\(?\s*(?:isEnabled|isFeatureEnabled|hasFeature|featureEnabled)\s*\("), "check"),
+        (
+            re.compile(r"if\s*\(?\s*(?:isEnabled|isFeatureEnabled|hasFeature|featureEnabled)\s*\("),
+            "check",
+        ),
     ]
 
     # Hardcoded constant patterns
     CONSTANT_PATTERNS = [
         # const/const/final with ALL_CAPS name
-        (re.compile(r"(?:const|final|static)\s+(?:String|int|double|num)\s+([A-Z][A-Z0-9_]{2,})\s*=\s*['\"]"), "string"),
+        (
+            re.compile(
+                r"(?:const|final|static)\s+(?:String|int|double|num)\s+([A-Z][A-Z0-9_]{2,})\s*=\s*['\"]"
+            ),
+            "string",
+        ),
         # const/const/final with ALL_CAPS name (numeric)
-        (re.compile(r"(?:const|final|static)\s+(?:int|double|num)\s+([A-Z][A-Z0-9_]{2,})\s*=\s*\d+"), "numeric"),
+        (
+            re.compile(
+                r"(?:const|final|static)\s+(?:int|double|num)\s+([A-Z][A-Z0-9_]{2,})\s*=\s*\d+"
+            ),
+            "numeric",
+        ),
     ]
 
     # API URL patterns
     API_URL_PATTERNS = [
         # URL strings
-        (re.compile(r"(?:base[_]?[Uu]rl|api[_]?[Uu]rl|endpoint|BASE_URL|API_URL)\s*[:=]\s*['\"]?(https?://[^'\"\s]+)['\"]?"), "url"),
+        (
+            re.compile(
+                r"(?:base[_]?[Uu]rl|api[_]?[Uu]rl|endpoint|BASE_URL|API_URL)\s*[:=]\s*['\"]?(https?://[^'\"\s]+)['\"]?"
+            ),
+            "url",
+        ),
         # API endpoints
         (re.compile(r"['\"]/(api|v1|v2|graphql|rest)/[^'\"]*['\"]"), "path"),
     ]
 
     # Secret detection patterns
     SECRET_PATTERNS = [
-        re.compile(r"(?:api[_]?key|secret|password|token|credential|auth)[-_]?(?:key|secret|password|token|credential)?", re.IGNORECASE),
+        re.compile(
+            r"(?:api[_]?key|secret|password|token|credential|auth)[-_]?(?:key|secret|password|token|credential)?",
+            re.IGNORECASE,
+        ),
         re.compile(r"(?:private[_]?key|access[_]?key|client[_]?secret)", re.IGNORECASE),
     ]
 
@@ -202,13 +231,15 @@ class ConfigScanner:
         # Scan config files
         config_files = self._find_config_files(root, files)
         for cf in config_files:
-            report.config_files.append(ConfigItem(
-                name=cf.name,
-                type="config_file",
-                file=str(cf),
-                line=0,
-                metadata={"size": cf.stat().st_size if cf.exists() else 0},
-            ))
+            report.config_files.append(
+                ConfigItem(
+                    name=cf.name,
+                    type="config_file",
+                    file=str(cf),
+                    line=0,
+                    metadata={"size": cf.stat().st_size if cf.exists() else 0},
+                )
+            )
 
         # Scan source files for config usage
         for f in files:
@@ -269,14 +300,16 @@ class ConfigScanner:
             for pattern, is_compile_time in env_patterns:
                 for match in pattern.finditer(line):
                     name = match.group(1)
-                    items.append(ConfigItem(
-                        name=name,
-                        type="env_var",
-                        file=file_str,
-                        line=line_num,
-                        is_secret=any(sp.search(name) for sp in self.SECRET_PATTERNS),
-                        metadata={"is_compile_time": is_compile_time},
-                    ))
+                    items.append(
+                        ConfigItem(
+                            name=name,
+                            type="env_var",
+                            file=file_str,
+                            line=line_num,
+                            is_secret=any(sp.search(name) for sp in self.SECRET_PATTERNS),
+                            metadata={"is_compile_time": is_compile_time},
+                        )
+                    )
 
         # Scan for feature flags
         for line_num, line in enumerate(lines, 1):
@@ -289,14 +322,16 @@ class ConfigScanner:
                     default_match = re.search(r"=\s*(true|false)", line, re.IGNORECASE)
                     if default_match:
                         default = default_match.group(1).lower()
-                    items.append(ConfigItem(
-                        name=name,
-                        type="feature_flag",
-                        file=file_str,
-                        line=line_num,
-                        default_value=default,
-                        metadata={"flag_type": flag_type},
-                    ))
+                    items.append(
+                        ConfigItem(
+                            name=name,
+                            type="feature_flag",
+                            file=file_str,
+                            line=line_num,
+                            default_value=default,
+                            metadata={"flag_type": flag_type},
+                        )
+                    )
 
         # Scan for hardcoded constants
         for line_num, line in enumerate(lines, 1):
@@ -310,14 +345,16 @@ class ConfigScanner:
                     # Extract value
                     value_match = re.search(r"=\s*['\"]?([^'\"]+?)['\"]?\s*;", line)
                     value = value_match.group(1) if value_match else None
-                    items.append(ConfigItem(
-                        name=name,
-                        type="constant",
-                        file=file_str,
-                        line=line_num,
-                        value=value,
-                        metadata={"const_type": const_type},
-                    ))
+                    items.append(
+                        ConfigItem(
+                            name=name,
+                            type="constant",
+                            file=file_str,
+                            line=line_num,
+                            value=value,
+                            metadata={"const_type": const_type},
+                        )
+                    )
 
         # Scan for API URLs
         for line_num, line in enumerate(lines, 1):
@@ -325,14 +362,16 @@ class ConfigScanner:
                 match = pattern.search(line)
                 if match:
                     url = match.group(1) if match.lastindex else match.group(0)
-                    items.append(ConfigItem(
-                        name=url[:50],
-                        type="api_url",
-                        file=file_str,
-                        line=line_num,
-                        value=url,
-                        metadata={"url_type": url_type},
-                    ))
+                    items.append(
+                        ConfigItem(
+                            name=url[:50],
+                            type="api_url",
+                            file=file_str,
+                            line=line_num,
+                            value=url,
+                            metadata={"url_type": url_type},
+                        )
+                    )
 
         return items
 

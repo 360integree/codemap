@@ -38,15 +38,17 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
     cluster_nodes = []
 
     for g in god_nodes:
-        cluster_nodes.append({
-            "id": _esc(g["id"]),
-            "name": g["id"].split("/")[-1],
-            "type": "god",
-            "file": g["id"],
-            "size": 22,
-            "shape": "diamond",
-            "cluster": None,
-        })
+        cluster_nodes.append(
+            {
+                "id": _esc(g["id"]),
+                "name": g["id"].split("/")[-1],
+                "type": "god",
+                "file": g["id"],
+                "size": 22,
+                "shape": "diamond",
+                "cluster": None,
+            }
+        )
 
     if community_clusters:
         # Use algorithmic community detection results (Leiden / greedy modularity / path-based)
@@ -54,33 +56,37 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
             cid = comm["id"]
             name = comm.get("name", cid)
             member_count = len(comm.get("members", []))
-            cluster_nodes.append({
-                "id": cid,
-                "name": f"{name} ({member_count})",
-                "type": "cluster",
-                "entityType": cid,
-                "file": f"{member_count} entities",
-                "size": 14 + min(member_count // 20, 12),
-                "shape": "dot",
-                "cluster": None,
-                "members": comm.get("members", []),
-            })
+            cluster_nodes.append(
+                {
+                    "id": cid,
+                    "name": f"{name} ({member_count})",
+                    "type": "cluster",
+                    "entityType": cid,
+                    "file": f"{member_count} entities",
+                    "size": 14 + min(member_count // 20, 12),
+                    "shape": "dot",
+                    "cluster": None,
+                    "members": comm.get("members", []),
+                }
+            )
     else:
         # Fallback: group by entity type
         for t, ents in type_groups.items():
             if t == "module":
                 continue
             cid = f"cluster_{t}"
-            cluster_nodes.append({
-                "id": cid,
-                "name": f"{t} ({len(ents)})",
-                "type": "cluster",
-                "entityType": t,
-                "file": f"{len(ents)} entities",
-                "size": 14 + min(len(ents) // 20, 12),
-                "shape": "dot",
-                "cluster": None,
-            })
+            cluster_nodes.append(
+                {
+                    "id": cid,
+                    "name": f"{t} ({len(ents)})",
+                    "type": "cluster",
+                    "entityType": t,
+                    "file": f"{len(ents)} entities",
+                    "size": 14 + min(len(ents) // 20, 12),
+                    "shape": "dot",
+                    "cluster": None,
+                }
+            )
 
     # Map entities to clusters
     ent_to_cluster = {}
@@ -134,13 +140,15 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
         label = ", ".join(sorted(types)[:3])
         if len(label) > 30:
             label = label[:27] + "..."
-        cluster_edges.append({
-            "source": src,
-            "target": tgt,
-            "label": label,
-            "count": count,
-            "width": min(count // 10 + 1, 4),
-        })
+        cluster_edges.append(
+            {
+                "source": src,
+                "target": tgt,
+                "label": label,
+                "count": count,
+                "width": min(count // 10 + 1, 4),
+            }
+        )
 
     # Prepare member data for drill-down
     member_data = {}
@@ -154,24 +162,28 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
             for mid in member_ids:
                 eid = _esc(mid)
                 ent = entity_map.get(eid, {})
-                members.append({
-                    "id": eid,
-                    "name": ent.get("name", mid),
-                    "type": ent.get("type", "unknown"),
-                    "file": ent.get("file", ""),
-                    "size": 6,
-                    "shape": "diamond" if eid in god_ids else "dot",
-                })
+                members.append(
+                    {
+                        "id": eid,
+                        "name": ent.get("name", mid),
+                        "type": ent.get("type", "unknown"),
+                        "file": ent.get("file", ""),
+                        "size": 6,
+                        "shape": "diamond" if eid in god_ids else "dot",
+                    }
+                )
             member_edges = []
             for r in relationships:
                 src = _esc(r["source"])
                 tgt = _esc(r["target"])
                 if src in member_set and tgt in member_set and src != tgt:
-                    member_edges.append({
-                        "source": src,
-                        "target": tgt,
-                        "type": r.get("type", ""),
-                    })
+                    member_edges.append(
+                        {
+                            "source": src,
+                            "target": tgt,
+                            "type": r.get("type", ""),
+                        }
+                    )
             member_data[cid] = {"nodes": members[:80], "edges": member_edges[:100]}
     else:
         # Type-based drill-down fallback
@@ -181,14 +193,16 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
             members = []
             for e in ents[:80]:
                 eid = _esc(e["id"])
-                members.append({
-                    "id": eid,
-                    "name": e.get("name", eid),
-                    "type": e.get("type", "unknown"),
-                    "file": e.get("file", ""),
-                    "size": 6,
-                    "shape": "diamond" if eid in god_ids else "dot",
-                })
+                members.append(
+                    {
+                        "id": eid,
+                        "name": e.get("name", eid),
+                        "type": e.get("type", "unknown"),
+                        "file": e.get("file", ""),
+                        "size": 6,
+                        "shape": "diamond" if eid in god_ids else "dot",
+                    }
+                )
             member_edges = []
             for r in relationships:
                 src = _esc(r["source"])
@@ -198,11 +212,13 @@ def export_html(graph_data: dict, output_path: Path) -> Path:
                 if src_ent and tgt_ent:
                     if src_ent.get("type") == t or tgt_ent.get("type") == t:
                         if src != tgt:
-                            member_edges.append({
-                                "source": src,
-                                "target": tgt,
-                                "type": r.get("type", ""),
-                            })
+                            member_edges.append(
+                                {
+                                    "source": src,
+                                    "target": tgt,
+                                    "type": r.get("type", ""),
+                                }
+                            )
             member_data[t] = {"nodes": members, "edges": member_edges[:100]}
 
     vis_js = Path("/tmp/vis-network.min.js").read_text()
@@ -280,8 +296,8 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
 const clusterNodes = {json.dumps(cluster_nodes)};
 const clusterEdges = {json.dumps(cluster_edges)};
 const memberData = {json.dumps(member_data)};
-const entityMap = {json.dumps({k: {"name": v.get("name",""), "type": v.get("type",""), "file": v.get("file",""), "id": v["id"]} for k, v in entity_map.items()})};
-const allRelationships = {json.dumps([{"source": _esc(r["source"]), "target": _esc(r["target"]), "type": r.get("type","")} for r in relationships])};
+const entityMap = {json.dumps({k: {"name": v.get("name", ""), "type": v.get("type", ""), "file": v.get("file", ""), "id": v["id"]} for k, v in entity_map.items()})};
+const allRelationships = {json.dumps([{"source": _esc(r["source"]), "target": _esc(r["target"]), "type": r.get("type", "")} for r in relationships])};
 
 const colors = {{
   module: '#58a6ff', class: '#3fb950', function: '#d2a8ff',

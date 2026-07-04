@@ -24,6 +24,7 @@ def detect_communities(G: "nx.DiGraph") -> dict[str, list[str]]:
     try:
         import igraph as ig
         from leidenalg import ModularityVertexPartition, find_partition
+
         g = ig.Graph.from_networkx(G.to_undirected())
         partition = find_partition(g, ModularityVertexPartition)
         communities = defaultdict(list)
@@ -40,6 +41,7 @@ def detect_communities(G: "nx.DiGraph") -> dict[str, list[str]]:
     # --- Attempt 2: Greedy modularity (on undirected graph) ---
     try:
         from networkx.algorithms.community import greedy_modularity_communities
+
         G_undir = G.to_undirected()
         communities = greedy_modularity_communities(G_undir)
         result = {}
@@ -152,11 +154,13 @@ def find_surprising_links(
     # 1. Find circular dependencies (A→B and B→A)
     for source, target in G.edges():
         if G.has_edge(target, source) and source < target:  # deduplicate
-            surprising.append({
-                "source": source,
-                "target": target,
-                "reason": f"Circular dependency: {source} ↔ {target}",
-            })
+            surprising.append(
+                {
+                    "source": source,
+                    "target": target,
+                    "reason": f"Circular dependency: {source} ↔ {target}",
+                }
+            )
 
     # 2. Find test files importing non-public implementation details
     for source, target in G.edges():
@@ -169,11 +173,13 @@ def find_surprising_links(
             if edge_type == "imports":
                 # Check if target is in an internal/private directory
                 if any(seg.startswith("_") for seg in Path(tgt_ent.file).parts):
-                    surprising.append({
-                        "source": source,
-                        "target": target,
-                        "reason": f"Test imports private implementation: {src_ent.file} → {tgt_ent.file}",
-                    })
+                    surprising.append(
+                        {
+                            "source": source,
+                            "target": target,
+                            "reason": f"Test imports private implementation: {src_ent.file} → {tgt_ent.file}",
+                        }
+                    )
 
     # 3. Find cross-package extends/implements (UI layer extending core internals)
     for source, target in G.edges():
@@ -187,11 +193,13 @@ def find_surprising_links(
             edge_data = G.edges[source, target]
             rel_type = edge_data.get("type", "")
             if rel_type in ("extends", "implements"):
-                surprising.append({
-                    "source": source,
-                    "target": target,
-                    "reason": f"Cross-package {rel_type}: {src_ent.file} → {tgt_ent.file}",
-                })
+                surprising.append(
+                    {
+                        "source": source,
+                        "target": target,
+                        "reason": f"Cross-package {rel_type}: {src_ent.file} → {tgt_ent.file}",
+                    }
+                )
 
     return surprising[:20]
 
@@ -204,18 +212,18 @@ def find_god_nodes(G: "nx.DiGraph", top_n: int = 10) -> list[dict]:
     result = []
     for node_id, deg in sorted_nodes:
         node_data = G.nodes.get(node_id, {})
-        result.append({
-            "id": node_id,
-            "name": node_data.get("name", node_id),
-            "connections": deg,
-            "reason": f"High connectivity ({deg} edges) in {node_data.get('file', 'unknown')}",
-        })
+        result.append(
+            {
+                "id": node_id,
+                "name": node_data.get("name", node_id),
+                "connections": deg,
+                "reason": f"High connectivity ({deg} edges) in {node_data.get('file', 'unknown')}",
+            }
+        )
     return result
 
 
-def find_paths(
-    G: "nx.DiGraph", source: str, target: str, max_length: int = 6
-) -> list[list[str]]:
+def find_paths(G: "nx.DiGraph", source: str, target: str, max_length: int = 6) -> list[list[str]]:
     """Find all paths between source and target up to max_length."""
     if source not in G or target not in G:
         return []
@@ -227,9 +235,7 @@ def find_paths(
         return []
 
 
-def get_entity_context(
-    entity_id: str, G: "nx.DiGraph", entities: dict
-) -> dict:
+def get_entity_context(entity_id: str, G: "nx.DiGraph", entities: dict) -> dict:
     """Get full context for an entity."""
     if entity_id not in G:
         return {"error": f"Entity '{entity_id}' not found"}
@@ -241,20 +247,24 @@ def get_entity_context(
     incoming = []
     for pred in predecessors:
         edge_data = G.edges[pred, entity_id]
-        incoming.append({
-            "from": pred,
-            "type": edge_data.get("type", "unknown"),
-            "confidence": edge_data.get("confidence", "UNKNOWN"),
-        })
+        incoming.append(
+            {
+                "from": pred,
+                "type": edge_data.get("type", "unknown"),
+                "confidence": edge_data.get("confidence", "UNKNOWN"),
+            }
+        )
 
     outgoing = []
     for succ in successors:
         edge_data = G.edges[entity_id, succ]
-        outgoing.append({
-            "to": succ,
-            "type": edge_data.get("type", "unknown"),
-            "confidence": edge_data.get("confidence", "UNKNOWN"),
-        })
+        outgoing.append(
+            {
+                "to": succ,
+                "type": edge_data.get("type", "unknown"),
+                "confidence": edge_data.get("confidence", "UNKNOWN"),
+            }
+        )
 
     return {
         "id": entity_id,
@@ -262,7 +272,9 @@ def get_entity_context(
         "type": node_data.get("type", "unknown"),
         "file": node_data.get("file", "unknown"),
         "line": node_data.get("line", 0),
-        "metadata": {k: v for k, v in node_data.items() if k not in ("name", "type", "file", "line")},
+        "metadata": {
+            k: v for k, v in node_data.items() if k not in ("name", "type", "file", "line")
+        },
         "incoming_relationships": incoming,
         "outgoing_relationships": outgoing,
         "total_connections": len(predecessors) + len(successors),

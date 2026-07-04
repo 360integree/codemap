@@ -8,6 +8,7 @@ To add a new language:
 2. Add an extractor script/program that outputs behavioral_data.json
 3. Register it in DETECTORS below
 """
+
 import subprocess
 from pathlib import Path
 

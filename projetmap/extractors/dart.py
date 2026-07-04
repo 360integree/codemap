@@ -19,38 +19,26 @@ class DartExtractor(BaseExtractor):
         r"""(?:\s+implements\s+([\w\s,]+?))?"""
         r"""\s*\{"""
     )
-    RE_MIXIN = re.compile(
-        r"""mixin\s+(\w+)(?:\s+on\s+([\w\s,]+?))?\s*\{"""
-    )
-    RE_ENUM = re.compile(
-        r"""enum\s+(\w+)(?:\s+with\s+([\w\s,]+?))?\s*\{"""
-    )
+    RE_MIXIN = re.compile(r"""mixin\s+(\w+)(?:\s+on\s+([\w\s,]+?))?\s*\{""")
+    RE_ENUM = re.compile(r"""enum\s+(\w+)(?:\s+with\s+([\w\s,]+?))?\s*\{""")
     RE_FUNCTION = re.compile(
         r"""(?:static\s+)?(?:Future|Stream|void|String|int|double|bool|dynamic|List|Map|Set|Iterable)\s*<?[\w,\s>]*>?\s+(\w+)\s*\("""
     )
-    RE路由 = re.compile(
-        r"""GoRoute\s*\(\s*(?:path:\s*['"]([^'"]+)['"]|name:\s*['"]([^'"]+)['"])"""
-    )
+    RE路由 = re.compile(r"""GoRoute\s*\(\s*(?:path:\s*['"]([^'"]+)['"]|name:\s*['"]([^'"]+)['"])""")
     RE_PROVIDER = re.compile(
         r"""(?:StateProvider|FutureProvider|StreamProvider|NotifierProvider|AsyncNotifierProvider|Provider)\s*<[^>]*>\s*\(\s*(?:[\w.]*\s*(?:ref|read|watch)\s*(?:\.\w+)?\s*(?:=>\s*[^;]+)?)"""
     )
     RE_PROVIDER_DECL = re.compile(
         r"""(\w+Provider)\s*=\s*(?:StateProvider|FutureProvider|StreamProvider|NotifierProvider|AsyncNotifierProvider)"""
     )
-    RE_TABLE = re.compile(
-        r"""class\s+(\w+)\s+extends\s+Table"""
-    )
+    RE_TABLE = re.compile(r"""class\s+(\w+)\s+extends\s+Table""")
     RE_COLUMN = re.compile(
         r"""(?:TextColumn|IntColumn|RealColumn|BoolColumn|DateTimeColumn|BlobColumn)\s+get\s+(\w+)"""
     )
     RE_FREEZED = re.compile(r"""@freezed|@Freezed\(|@JsonSerializable""")
     RE_OVERRIDE = re.compile(r"""@override""")
-    RE_TOOL = re.compile(
-        r"""class\s+(\w+)\s+extends\s+(?:Base)?Tool"""
-    )
-    RE_FACTORY = re.compile(
-        r"""factory\s+(\w+)\s*\("""
-    )
+    RE_TOOL = re.compile(r"""class\s+(\w+)\s+extends\s+(?:Base)?Tool""")
+    RE_FACTORY = re.compile(r"""factory\s+(\w+)\s*\(""")
 
     def extract(self, file_path: Path, root: Path) -> ExtractionResult:
         content = self._read_file(file_path)
@@ -62,13 +50,15 @@ class DartExtractor(BaseExtractor):
         lines = content.split("\n")
 
         # File module entity
-        result.entities.append(Entity(
-            id=file_id,
-            type="module",
-            name=file_path.name,
-            file=file_id,
-            metadata={"lines": len(lines), "ext": file_path.suffix},
-        ))
+        result.entities.append(
+            Entity(
+                id=file_id,
+                type="module",
+                name=file_path.name,
+                file=file_id,
+                metadata={"lines": len(lines), "ext": file_path.suffix},
+            )
+        )
 
         # Extract imports
         for m in self.RE_IMPORT.finditer(content):
@@ -76,26 +66,30 @@ class DartExtractor(BaseExtractor):
             result.imports.append(imp)
             target = self._resolve_import(imp, file_path, root)
             if target:
-                result.relationships.append(Relationship(
-                    source=file_id,
-                    target=target,
-                    type="imports",
-                    confidence="EXTRACTED",
-                    evidence=f"import statement: {imp}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=file_id,
+                        target=target,
+                        type="imports",
+                        confidence="EXTRACTED",
+                        evidence=f"import statement: {imp}",
+                    )
+                )
 
         # Extract parts
         for m in self.RE_PART.finditer(content):
             part = m.group(1)
             target = self._resolve_import(part, file_path, root)
             if target:
-                result.relationships.append(Relationship(
-                    source=file_id,
-                    target=target,
-                    type="imports",
-                    confidence="EXTRACTED",
-                    evidence=f"part directive: {part}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=file_id,
+                        target=target,
+                        type="imports",
+                        confidence="EXTRACTED",
+                        evidence=f"part directive: {part}",
+                    )
+                )
 
         # Extract classes
         for m in self.RE_CLASS.finditer(content):
@@ -104,93 +98,141 @@ class DartExtractor(BaseExtractor):
             withs = self._parse_list(m.group(3))
             implements = self._parse_list(m.group(4))
 
-            result.entities.append(Entity(
-                id=name,
-                type="class",
-                name=name,
-                file=file_id,
-                line=self._line_of(content, m.start()),
-                metadata=self._class_metadata(content, m.start(), name),
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="class",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                    metadata=self._class_metadata(content, m.start(), name),
+                )
+            )
 
             if extends:
-                result.relationships.append(Relationship(
-                    source=name, target=extends, type="extends",
-                    confidence="EXTRACTED",
-                    evidence=f"class {name} extends {extends}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=name,
+                        target=extends,
+                        type="extends",
+                        confidence="EXTRACTED",
+                        evidence=f"class {name} extends {extends}",
+                    )
+                )
             for w in withs:
-                result.relationships.append(Relationship(
-                    source=name, target=w.strip(), type="implements",
-                    confidence="EXTRACTED",
-                    evidence=f"class {name} with {w.strip()}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=name,
+                        target=w.strip(),
+                        type="implements",
+                        confidence="EXTRACTED",
+                        evidence=f"class {name} with {w.strip()}",
+                    )
+                )
             for i in implements:
-                result.relationships.append(Relationship(
-                    source=name, target=i.strip(), type="implements",
-                    confidence="EXTRACTED",
-                    evidence=f"class {name} implements {i.strip()}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=name,
+                        target=i.strip(),
+                        type="implements",
+                        confidence="EXTRACTED",
+                        evidence=f"class {name} implements {i.strip()}",
+                    )
+                )
 
         # Extract mixins
         for m in self.RE_MIXIN.finditer(content):
             name = m.group(1)
             on_types = self._parse_list(m.group(2))
-            result.entities.append(Entity(
-                id=name, type="mixin", name=name, file=file_id,
-                line=self._line_of(content, m.start()),
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="mixin",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                )
+            )
             for ot in on_types:
-                result.relationships.append(Relationship(
-                    source=name, target=ot.strip(), type="implements",
-                    confidence="EXTRACTED",
-                    evidence=f"mixin {name} on {ot.strip()}",
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=name,
+                        target=ot.strip(),
+                        type="implements",
+                        confidence="EXTRACTED",
+                        evidence=f"mixin {name} on {ot.strip()}",
+                    )
+                )
 
         # Extract enums
         for m in self.RE_ENUM.finditer(content):
             name = m.group(1)
-            result.entities.append(Entity(
-                id=name, type="enum", name=name, file=file_id,
-                line=self._line_of(content, m.start()),
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="enum",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                )
+            )
 
         # Extract functions (top-level and class methods)
         for m in self.RE_FUNCTION.finditer(content):
             name = m.group(1)
             if name in ("if", "for", "while", "switch", "return", "import", "class"):
                 continue
-            result.entities.append(Entity(
-                id=name, type="function", name=name, file=file_id,
-                line=self._line_of(content, m.start()),
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="function",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                )
+            )
 
         # Extract GoRouter routes
         for m in self.RE路由.finditer(content):
             path = m.group(1) or m.group(2)
             if path:
-                result.entities.append(Entity(
-                    id=f"route:{path}", type="route", name=path, file=file_id,
-                    line=self._line_of(content, m.start()),
-                ))
+                result.entities.append(
+                    Entity(
+                        id=f"route:{path}",
+                        type="route",
+                        name=path,
+                        file=file_id,
+                        line=self._line_of(content, m.start()),
+                    )
+                )
 
         # Extract Riverpod providers
         for m in self.RE_PROVIDER_DECL.finditer(content):
             name = m.group(1)
-            result.entities.append(Entity(
-                id=name, type="config", name=name, file=file_id,
-                line=self._line_of(content, m.start()),
-                metadata={"kind": "riverpod_provider"},
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="config",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                    metadata={"kind": "riverpod_provider"},
+                )
+            )
 
         # Extract Drift tables
         for m in self.RE_TABLE.finditer(content):
             name = m.group(1)
-            result.entities.append(Entity(
-                id=name, type="schema", name=name, file=file_id,
-                line=self._line_of(content, m.start()),
-                metadata={"kind": "drift_table"},
-            ))
+            result.entities.append(
+                Entity(
+                    id=name,
+                    type="schema",
+                    name=name,
+                    file=file_id,
+                    line=self._line_of(content, m.start()),
+                    metadata={"kind": "drift_table"},
+                )
+            )
 
         # Extract freezed models
         if self.RE_FREEZED.search(content):
@@ -254,7 +296,7 @@ class DartExtractor(BaseExtractor):
         """Extract metadata about a class."""
         meta = {}
         # Check what comes before the class declaration
-        prefix = content[max(0, pos - 200):pos]
+        prefix = content[max(0, pos - 200) : pos]
         if "@immutable" in prefix:
             meta["immutable"] = True
         if "abstract" in prefix.split("class")[0][-20:]:
@@ -267,15 +309,17 @@ class DartExtractor(BaseExtractor):
         entity_names = {e.name for e in result.entities if e.type in ("class", "function")}
         # Simple heuristic: if entity name appears as word boundary in content
         for name in entity_names:
-            call_pattern = re.compile(r'\b' + re.escape(name) + r'\s*\(')
+            call_pattern = re.compile(r"\b" + re.escape(name) + r"\s*\(")
             for m in call_pattern.finditer(content):
                 line = self._line_of(content, m.start())
                 # Don't add self-references
-                result.relationships.append(Relationship(
-                    source=file_id,
-                    target=name,
-                    type="calls",
-                    confidence="INFERRED",
-                    evidence=f"{name}() called in {file_id}",
-                    line=line,
-                ))
+                result.relationships.append(
+                    Relationship(
+                        source=file_id,
+                        target=name,
+                        type="calls",
+                        confidence="INFERRED",
+                        evidence=f"{name}() called in {file_id}",
+                        line=line,
+                    )
+                )

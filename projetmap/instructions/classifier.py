@@ -31,6 +31,7 @@ class IntentType(str, Enum):
 @dataclass
 class ClassifiedChunk:
     """An InstructionChunk with its classified intent."""
+
     chunk: InstructionChunk
     intents: set[IntentType] = field(default_factory=set)
     primary_intent: IntentType = IntentType.UNKNOWN
@@ -182,7 +183,10 @@ class IntentClassifier:
         return [self.classify(chunk) for chunk in chunks]
 
     def _determine_severity(
-        self, text: str, intents: set[IntentType], primary: IntentType,
+        self,
+        text: str,
+        intents: set[IntentType],
+        primary: IntentType,
     ) -> str:
         """Determine severity based on intent combination and content."""
         # Critical: Constraint + Mandate in same chunk = potential contradiction

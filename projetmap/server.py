@@ -7,6 +7,7 @@ Usage:
     python -m projetmap mcp          # Start MCP server over stdio
     python -m projetmap mcp --help   # Show server options
 """
+
 import json
 from pathlib import Path
 
@@ -60,8 +61,9 @@ def _load_behavioral(path: str) -> dict | None:
 
 
 @mcp.tool()
-def projetmap_scan(path: str, refresh: bool = False, behavioral: bool = False,
-                   journeys: bool = False) -> str:
+def projetmap_scan(
+    path: str, refresh: bool = False, behavioral: bool = False, journeys: bool = False
+) -> str:
     """Scan a codebase and build a knowledge graph.
 
     Run this first to initialize the graph for a project.
@@ -137,10 +139,12 @@ def projetmap_report(path: str) -> str:
     out = _get_out_dir(path)
     report_file = out / "GRAPH_REPORT.md"
     if not report_file.exists():
-        return json.dumps({
-            "status": "error",
-            "error": f"No report found at {report_file}. Run projetmap_scan first.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": f"No report found at {report_file}. Run projetmap_scan first.",
+            }
+        )
     return report_file.read_text(encoding="utf-8")
 
 
@@ -154,18 +158,19 @@ def projetmap_query(path: str, entity_name: str) -> str:
     """
     data = _load_graph(path)
     if not data:
-        return json.dumps({
-            "status": "error",
-            "error": "No cached graph. Run projetmap_scan first.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No cached graph. Run projetmap_scan first.",
+            }
+        )
 
     entities = {e["id"]: e for e in data.get("entities", [])}
     relationships = data.get("relationships", [])
 
     matches = []
     for eid, ent in entities.items():
-        if (entity_name.lower() in eid.lower()
-                or entity_name.lower() in ent.get("name", "").lower()):
+        if entity_name.lower() in eid.lower() or entity_name.lower() in ent.get("name", "").lower():
             matches.append((eid, ent))
 
     if not matches:
@@ -175,15 +180,17 @@ def projetmap_query(path: str, entity_name: str) -> str:
     for eid, ent in matches[:5]:
         incoming = [r for r in relationships if r["target"] == eid]
         outgoing = [r for r in relationships if r["source"] == eid]
-        results.append({
-            "id": eid,
-            "name": ent.get("name", ""),
-            "type": ent.get("type", ""),
-            "file": ent.get("file", ""),
-            "line": ent.get("line"),
-            "incoming": [{"source": r["source"], "type": r["type"]} for r in incoming[:10]],
-            "outgoing": [{"target": r["target"], "type": r["type"]} for r in outgoing[:10]],
-        })
+        results.append(
+            {
+                "id": eid,
+                "name": ent.get("name", ""),
+                "type": ent.get("type", ""),
+                "file": ent.get("file", ""),
+                "line": ent.get("line"),
+                "incoming": [{"source": r["source"], "type": r["type"]} for r in incoming[:10]],
+                "outgoing": [{"target": r["target"], "type": r["type"]} for r in outgoing[:10]],
+            }
+        )
 
     return json.dumps({"status": "ok", "matches": results}, indent=2)
 
@@ -199,12 +206,15 @@ def projetmap_path(path: str, source: str, dest: str) -> str:
     """
     data = _load_graph(path)
     if not data:
-        return json.dumps({
-            "status": "error",
-            "error": "No cached graph. Run projetmap_scan first.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No cached graph. Run projetmap_scan first.",
+            }
+        )
 
     import networkx as nx
+
     G = nx.DiGraph()
     for r in data.get("relationships", []):
         G.add_edge(r["source"], r["target"], type=r["type"])
@@ -220,7 +230,8 @@ def projetmap_path(path: str, source: str, dest: str) -> str:
             return direct
         # Entity name -> file path
         matches = [
-            e["file"] for e in entities
+            e["file"]
+            for e in entities
             if query.lower() in e.get("name", "").lower()
             or query.lower() in e.get("id", "").lower()
         ]
@@ -259,17 +270,22 @@ def projetmap_dead_code(path: str) -> str:
     """
     bh = _load_behavioral(path)
     if not bh:
-        return json.dumps({
-            "status": "error",
-            "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
+            }
+        )
 
     dead = bh.get("dead_code", [])
-    return json.dumps({
-        "status": "ok",
-        "count": len(dead),
-        "functions": dead[:30],
-    }, indent=2)
+    return json.dumps(
+        {
+            "status": "ok",
+            "count": len(dead),
+            "functions": dead[:30],
+        },
+        indent=2,
+    )
 
 
 @mcp.tool()
@@ -283,17 +299,22 @@ def projetmap_hotspots(path: str) -> str:
     """
     bh = _load_behavioral(path)
     if not bh:
-        return json.dumps({
-            "status": "error",
-            "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
+            }
+        )
 
     hotspots = bh.get("mutation_hotspots", [])
-    return json.dumps({
-        "status": "ok",
-        "count": len(hotspots),
-        "hotspots": hotspots[:15],
-    }, indent=2)
+    return json.dumps(
+        {
+            "status": "ok",
+            "count": len(hotspots),
+            "hotspots": hotspots[:15],
+        },
+        indent=2,
+    )
 
 
 @mcp.tool()
@@ -307,21 +328,26 @@ def projetmap_listeners(path: str) -> str:
     """
     bh = _load_behavioral(path)
     if not bh:
-        return json.dumps({
-            "status": "error",
-            "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No behavioral analysis. Run projetmap_scan with behavioral=true.",
+            }
+        )
 
     unpaired = bh.get("unpaired_listeners", [])
     problematic = [u for u in unpaired if u.get("unpaired", 0) > 0]
     paired = [u for u in unpaired if u.get("unpaired", 0) == 0]
 
-    return json.dumps({
-        "status": "ok",
-        "problematic_count": len(problematic),
-        "paired_count": len(paired),
-        "problematic": problematic,
-    }, indent=2)
+    return json.dumps(
+        {
+            "status": "ok",
+            "problematic_count": len(problematic),
+            "paired_count": len(paired),
+            "problematic": problematic,
+        },
+        indent=2,
+    )
 
 
 @mcp.tool()
@@ -336,17 +362,22 @@ def projetmap_god_nodes(path: str) -> str:
     """
     data = _load_graph(path)
     if not data:
-        return json.dumps({
-            "status": "error",
-            "error": "No cached graph. Run projetmap_scan first.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No cached graph. Run projetmap_scan first.",
+            }
+        )
 
     god_nodes = data.get("metadata", {}).get("god_nodes", data.get("god_nodes", []))
-    return json.dumps({
-        "status": "ok",
-        "count": len(god_nodes),
-        "god_nodes": god_nodes[:10],
-    }, indent=2)
+    return json.dumps(
+        {
+            "status": "ok",
+            "count": len(god_nodes),
+            "god_nodes": god_nodes[:10],
+        },
+        indent=2,
+    )
 
 
 @mcp.tool()
@@ -363,10 +394,12 @@ def projetmap_journeys(path: str, feature: str = None) -> str:
     out = _get_out_dir(path)
     journey_file = out / "user_journeys.json"
     if not journey_file.exists():
-        return json.dumps({
-            "status": "error",
-            "error": "No journey analysis found. Run projetmap_scan with journeys=true.",
-        })
+        return json.dumps(
+            {
+                "status": "error",
+                "error": "No journey analysis found. Run projetmap_scan with journeys=true.",
+            }
+        )
 
     with open(journey_file) as f:
         data = json.load(f)
@@ -375,17 +408,21 @@ def projetmap_journeys(path: str, feature: str = None) -> str:
 
     if feature:
         journeys = [
-            j for j in journeys
+            j
+            for j in journeys
             if feature.lower() in j.get("feature", "").lower()
             or feature.lower() in j.get("name", "").lower()
         ]
 
-    return json.dumps({
-        "status": "ok",
-        "count": len(journeys),
-        "journeys": journeys[:20],
-        "summary": data.get("summary", {}),
-    }, indent=2)
+    return json.dumps(
+        {
+            "status": "ok",
+            "count": len(journeys),
+            "journeys": journeys[:20],
+            "summary": data.get("summary", {}),
+        },
+        indent=2,
+    )
 
 
 # ── Entry point ────────────────────────────────────────────────────────

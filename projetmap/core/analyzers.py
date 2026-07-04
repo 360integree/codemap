@@ -32,13 +32,15 @@ class LayerViolationAnalyzer:
                 si = layer_order.index(source_layer) if source_layer in layer_order else -1
                 ti = layer_order.index(target_layer) if target_layer in layer_order else -1
                 if si >= 0 and ti >= 0 and si < ti:
-                    violations.append({
-                        "source": rel.source,
-                        "target": rel.target,
-                        "violation": f"{source_layer} layer directly imports {target_layer} layer",
-                        "source_layer": source_layer,
-                        "target_layer": target_layer,
-                    })
+                    violations.append(
+                        {
+                            "source": rel.source,
+                            "target": rel.target,
+                            "violation": f"{source_layer} layer directly imports {target_layer} layer",
+                            "source_layer": source_layer,
+                            "target_layer": target_layer,
+                        }
+                    )
         return violations
 
     def _detect_layer(self, entity: Entity) -> str:
@@ -65,11 +67,13 @@ class CircularDependencyAnalyzer:
         try:
             for cycle in nx.simple_cycles(G):
                 if len(cycle) > 1:
-                    cycles.append({
-                        "cycle": cycle,
-                        "length": len(cycle),
-                        "description": " → ".join(cycle) + " → " + cycle[0],
-                    })
+                    cycles.append(
+                        {
+                            "cycle": cycle,
+                            "length": len(cycle),
+                            "description": " → ".join(cycle) + " → " + cycle[0],
+                        }
+                    )
         except Exception:
             pass
 

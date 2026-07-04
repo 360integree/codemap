@@ -16,6 +16,7 @@ from pathlib import Path
 @dataclass
 class TestFile:
     """A detected test file."""
+
     file: str
     test_framework: str
     test_count: int
@@ -27,6 +28,7 @@ class TestFile:
 @dataclass
 class ModuleCoverage:
     """Coverage information for a source module."""
+
     source_file: str
     has_test: bool
     test_file: str | None = None
@@ -38,6 +40,7 @@ class ModuleCoverage:
 @dataclass
 class TestCoverageReport:
     """Complete test coverage analysis report."""
+
     test_files: list[TestFile] = field(default_factory=list)
     module_coverage: list[ModuleCoverage] = field(default_factory=list)
     untested_modules: list[str] = field(default_factory=list)
@@ -73,7 +76,9 @@ class TestCoverageReport:
                 "tested_modules": sum(1 for mc in self.module_coverage if mc.has_test),
                 "untested_modules": len(self.untested_modules),
                 "coverage_percentage": self._calc_coverage_pct(),
-                "high_risk_modules": sum(1 for mc in self.module_coverage if mc.risk_level in ("high", "critical")),
+                "high_risk_modules": sum(
+                    1 for mc in self.module_coverage if mc.risk_level in ("high", "critical")
+                ),
             },
         }
 
@@ -125,7 +130,9 @@ class TestCoverageScanner:
             "pattern": re.compile(r"(?:Test\.java|Tests\.java)$"),
             "frameworks": {
                 "junit4": re.compile(r"(?:@Test|@Before|@After|import\s+org\.junit)"),
-                "junit5": re.compile(r"(?:@Test|@BeforeEach|@AfterEach|import\s+org\.junit\.jupiter)"),
+                "junit5": re.compile(
+                    r"(?:@Test|@BeforeEach|@AfterEach|import\s+org\.junit\.jupiter)"
+                ),
                 "mockito": re.compile(r"(?:mock\(|when\(|verify\()"),
             },
         },
@@ -335,7 +342,17 @@ class TestCoverageScanner:
         """Check if an import is from the standard library."""
         stdlib_prefixes = {
             "dart": ["dart:", "package:flutter/", "package:collection/", "package:meta/"],
-            "python": ["os", "sys", "re", "json", "typing", "pathlib", "collections", "unittest", "pytest"],
+            "python": [
+                "os",
+                "sys",
+                "re",
+                "json",
+                "typing",
+                "pathlib",
+                "collections",
+                "unittest",
+                "pytest",
+            ],
             "javascript": ["node:", "fs", "path", "http", "https", "crypto"],
             "typescript": ["node:", "fs", "path", "http", "https", "crypto"],
             "java": ["java.", "javax.", "org.junit"],
@@ -349,8 +366,11 @@ class TestCoverageScanner:
         return any(import_path.startswith(p) for p in prefixes)
 
     def _map_coverage(
-        self, source_file: Path, language: str,
-        test_files: list[TestFile], root: Path,
+        self,
+        source_file: Path,
+        language: str,
+        test_files: list[TestFile],
+        root: Path,
     ) -> ModuleCoverage:
         """Map source file to its test coverage."""
         source_name = source_file.stem  # e.g., "user_repository"
@@ -360,8 +380,9 @@ class TestCoverageScanner:
         for tf in test_files:
             tf_path = Path(tf.file)
             # Match by name similarity
-            if (source_name in tf_path.stem or
-                source_name.replace("_", "") in tf_path.stem.replace("_", "")):
+            if source_name in tf_path.stem or source_name.replace("_", "") in tf_path.stem.replace(
+                "_", ""
+            ):
                 # Found a matching test file
                 return ModuleCoverage(
                     source_file=source_str,
@@ -400,8 +421,15 @@ class TestCoverageScanner:
         filename = source_file.name.lower()
 
         critical_patterns = [
-            "auth", "user", "payment", "security", "database",
-            "repository", "service", "orchestrator", "engine",
+            "auth",
+            "user",
+            "payment",
+            "security",
+            "database",
+            "repository",
+            "service",
+            "orchestrator",
+            "engine",
         ]
 
         if any(p in filename for p in critical_patterns):

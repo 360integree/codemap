@@ -44,22 +44,29 @@ class GraphBuilder:
         G = nx.DiGraph()
 
         for eid, entity in self.entities.items():
-            G.add_node(eid, **{
-                "type": entity.type,
-                "name": entity.name,
-                "file": entity.file,
-                "line": entity.line,
-                **entity.metadata,
-            })
+            G.add_node(
+                eid,
+                **{
+                    "type": entity.type,
+                    "name": entity.name,
+                    "file": entity.file,
+                    "line": entity.line,
+                    **entity.metadata,
+                },
+            )
 
         for rel in self.relationships:
             if rel.source in self.entities and rel.target in self.entities:
-                G.add_edge(rel.source, rel.target, **{
-                    "type": rel.type,
-                    "confidence": rel.confidence,
-                    "evidence": rel.evidence,
-                    "line": rel.line,
-                })
+                G.add_edge(
+                    rel.source,
+                    rel.target,
+                    **{
+                        "type": rel.type,
+                        "confidence": rel.confidence,
+                        "evidence": rel.evidence,
+                        "line": rel.line,
+                    },
+                )
 
         return G
 
@@ -68,21 +75,21 @@ class GraphBuilder:
         if not self.entity_degree:
             return []
 
-        sorted_nodes = sorted(
-            self.entity_degree.items(), key=lambda x: x[1], reverse=True
-        )[:top_n]
+        sorted_nodes = sorted(self.entity_degree.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
         result = []
         for node_id, degree in sorted_nodes:
             entity = self.entities.get(node_id)
             if entity:
-                result.append({
-                    "id": node_id,
-                    "connections": degree,
-                    "name": entity.name,
-                    "type": entity.type,
-                    "file": entity.file,
-                })
+                result.append(
+                    {
+                        "id": node_id,
+                        "connections": degree,
+                        "name": entity.name,
+                        "type": entity.type,
+                        "file": entity.file,
+                    }
+                )
         return result
 
     def get_clusters(self, G: "nx.DiGraph") -> list[dict]:
@@ -103,12 +110,14 @@ class GraphBuilder:
         for i, (key, data) in enumerate(sorted(clusters.items())):
             if len(data["members"]) < 2:
                 continue
-            result.append({
-                "id": f"cluster_{i}",
-                "name": key.split("/")[-1],
-                "members": data["members"],
-                "description": f"Files in {key}",
-            })
+            result.append(
+                {
+                    "id": f"cluster_{i}",
+                    "name": key.split("/")[-1],
+                    "members": data["members"],
+                    "description": f"Files in {key}",
+                }
+            )
         return result
 
     def get_stats(self) -> dict:
@@ -132,8 +141,13 @@ class GraphBuilder:
             "confidence": dict(confidence_counts),
         }
 
-    def to_dict(self, project_info: dict, clusters: list[dict],
-                god_nodes: list[dict], surprising_links: list[dict]) -> dict:
+    def to_dict(
+        self,
+        project_info: dict,
+        clusters: list[dict],
+        god_nodes: list[dict],
+        surprising_links: list[dict],
+    ) -> dict:
         """Convert graph to serializable dict."""
         return {
             "project": project_info,

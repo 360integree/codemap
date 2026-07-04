@@ -1,4 +1,5 @@
 """Structural extractors for different programming languages."""
+
 from pathlib import Path
 
 from projetmap.extractors.base import BaseExtractor

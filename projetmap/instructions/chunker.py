@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 @dataclass
 class InstructionChunk:
     """A semantically meaningful chunk of instruction text."""
+
     id: str
     text: str
     line_start: int
@@ -42,20 +43,56 @@ class InstructionChunker:
 
     # Topic keyword patterns (case-insensitive)
     TOPIC_PATTERNS = {
-        "education": re.compile(r"\b(education|degree|diploma|university|school|academic|credential|enrollment|graduation)\b", re.IGNORECASE),
-        "career": re.compile(r"\b(career|employment|job|profession|work|employer|occupation|seniority|experience)\b", re.IGNORECASE),
-        "language": re.compile(r"\b(language|english|ielts|toefl|pte|proficiency|linguistic|native|fluent)\b", re.IGNORECASE),
-        "financial": re.compile(r"\b(financial|savings|income|salary|revenue|budget|cost|funds|money|wealth|afford)\b", re.IGNORECASE),
-        "visa": re.compile(r"\b(visa|permit|status|immigration|migrant|passport|border|entry|overstay)\b", re.IGNORECASE),
-        "family": re.compile(r"\b(family|spouse|partner|children|dependents|parent|marital|household)\b", re.IGNORECASE),
-        "pathway": re.compile(r"\b(pathway|route|stream|program|category|eligibility|qualification)\b", re.IGNORECASE),
-        "timeline": re.compile(r"\b(timeline|deadline|processing|wait|duration|timeframe|schedule)\b", re.IGNORECASE),
-        "document": re.compile(r"\b(document|paperwork|certificate|transcript|assessment|evaluation|认证)\b", re.IGNORECASE),
-        "sovereignty": re.compile(r"\b(sovereignty|independence|autonomy|self.sufficient|diversif)\b", re.IGNORECASE),
-        "archetype": re.compile(r"\b(archetype|dreamer|planner|survivor|builder|paper.chaser)\b", re.IGNORECASE),
-        "inquiry": re.compile(r"\b(ask|assume|inquir|question|probe|never.*skip|always.*ask|don.t.*assume)\b", re.IGNORECASE),
-        "risk": re.compile(r"\b(risk|danger|barrier|impossib|refusal|denial|criminal|inadmiss)\b", re.IGNORECASE),
-        "settlement": re.compile(r"\b(settl|integrat|adapt|community|social|network|diaspora)\b", re.IGNORECASE),
+        "education": re.compile(
+            r"\b(education|degree|diploma|university|school|academic|credential|enrollment|graduation)\b",
+            re.IGNORECASE,
+        ),
+        "career": re.compile(
+            r"\b(career|employment|job|profession|work|employer|occupation|seniority|experience)\b",
+            re.IGNORECASE,
+        ),
+        "language": re.compile(
+            r"\b(language|english|ielts|toefl|pte|proficiency|linguistic|native|fluent)\b",
+            re.IGNORECASE,
+        ),
+        "financial": re.compile(
+            r"\b(financial|savings|income|salary|revenue|budget|cost|funds|money|wealth|afford)\b",
+            re.IGNORECASE,
+        ),
+        "visa": re.compile(
+            r"\b(visa|permit|status|immigration|migrant|passport|border|entry|overstay)\b",
+            re.IGNORECASE,
+        ),
+        "family": re.compile(
+            r"\b(family|spouse|partner|children|dependents|parent|marital|household)\b",
+            re.IGNORECASE,
+        ),
+        "pathway": re.compile(
+            r"\b(pathway|route|stream|program|category|eligibility|qualification)\b", re.IGNORECASE
+        ),
+        "timeline": re.compile(
+            r"\b(timeline|deadline|processing|wait|duration|timeframe|schedule)\b", re.IGNORECASE
+        ),
+        "document": re.compile(
+            r"\b(document|paperwork|certificate|transcript|assessment|evaluation|认证)\b",
+            re.IGNORECASE,
+        ),
+        "sovereignty": re.compile(
+            r"\b(sovereignty|independence|autonomy|self.sufficient|diversif)\b", re.IGNORECASE
+        ),
+        "archetype": re.compile(
+            r"\b(archetype|dreamer|planner|survivor|builder|paper.chaser)\b", re.IGNORECASE
+        ),
+        "inquiry": re.compile(
+            r"\b(ask|assume|inquir|question|probe|never.*skip|always.*ask|don.t.*assume)\b",
+            re.IGNORECASE,
+        ),
+        "risk": re.compile(
+            r"\b(risk|danger|barrier|impossib|refusal|denial|criminal|inadmiss)\b", re.IGNORECASE
+        ),
+        "settlement": re.compile(
+            r"\b(settl|integrat|adapt|community|social|network|diaspora)\b", re.IGNORECASE
+        ),
         "citizenship": re.compile(r"\b(citizen|naturaliz|passport|national)\b", re.IGNORECASE),
     }
 
@@ -64,10 +101,17 @@ class InstructionChunker:
 
     # Scope keywords
     SCOPE_KEYWORDS = {
-        "pre_immigration": re.compile(r"\b(pre.immigration|exploring|planning|ready)\b", re.IGNORECASE),
+        "pre_immigration": re.compile(
+            r"\b(pre.immigration|exploring|planning|ready)\b", re.IGNORECASE
+        ),
         "in_process": re.compile(r"\b(in.process|applied|waiting|application)\b", re.IGNORECASE),
-        "post_immigration": re.compile(r"\b(post.immigration|settled|permanent.resident|citizen|living.abroad)\b", re.IGNORECASE),
-        "global": re.compile(r"\b(always|never|critical|mandatory|required|universal)\b", re.IGNORECASE),
+        "post_immigration": re.compile(
+            r"\b(post.immigration|settled|permanent.resident|citizen|living.abroad)\b",
+            re.IGNORECASE,
+        ),
+        "global": re.compile(
+            r"\b(always|never|critical|mandatory|required|universal)\b", re.IGNORECASE
+        ),
         "turn_specific": re.compile(r"\b(turn\s*\d|turn\s*\d+[-+])\b", re.IGNORECASE),
     }
 
@@ -110,7 +154,7 @@ class InstructionChunker:
         for idx, (line_num, level, title) in enumerate(headers):
             # Section ends at next header of same or higher level, or EOF
             end_line = len(lines)
-            for next_line, next_level, _ in headers[idx + 1:]:
+            for next_line, next_level, _ in headers[idx + 1 :]:
                 if next_level <= level:
                     end_line = next_line
                     break
@@ -121,15 +165,22 @@ class InstructionChunker:
         # Within each section, check for sub-splits
         chunk_index = 0
         for line_num, level, title, section_text, end_line in sections:
-            sub_chunks = self._split_section(section_text, line_num, source_file, title, level, chunk_index)
+            sub_chunks = self._split_section(
+                section_text, line_num, source_file, title, level, chunk_index
+            )
             chunks.extend(sub_chunks)
             chunk_index += len(sub_chunks)
 
         return chunks
 
     def _split_section(
-        self, text: str, base_line: int, source_file: str,
-        heading: str, heading_level: int, start_index: int,
+        self,
+        text: str,
+        base_line: int,
+        source_file: str,
+        heading: str,
+        heading_level: int,
+        start_index: int,
     ) -> list[InstructionChunk]:
         """Split a section into sub-chunks if it's long enough."""
         lines = text.split("\n")
@@ -153,7 +204,9 @@ class InstructionChunker:
         current_start = base_line
 
         for i, line in enumerate(lines):
-            if self.HR_PATTERN.match(line.strip()) or (not line.strip() and i > 0 and not lines[i - 1].strip()):
+            if self.HR_PATTERN.match(line.strip()) or (
+                not line.strip() and i > 0 and not lines[i - 1].strip()
+            ):
                 if current_lines:
                     sub_text = "\n".join(current_lines).strip()
                     if len(sub_text.split()) > 20:  # Only keep meaningful sub-chunks
@@ -207,8 +260,14 @@ class InstructionChunker:
         return sub_chunks
 
     def _make_chunk(
-        self, text: str, source_file: str, line_start: int, line_end: int,
-        heading: str, heading_level: int, chunk_index: int,
+        self,
+        text: str,
+        source_file: str,
+        line_start: int,
+        line_end: int,
+        heading: str,
+        heading_level: int,
+        chunk_index: int,
     ) -> InstructionChunk:
         """Create an InstructionChunk with extracted metadata."""
         chunk_id = f"{source_file}:chunk_{chunk_index}" if source_file else f"chunk_{chunk_index}"

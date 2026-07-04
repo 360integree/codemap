@@ -51,28 +51,35 @@ def export_journeys_html(report: JourneyReport, output_path: Path) -> Path:
             journey_of[node_id] = journey.name
 
             color = STEP_COLORS.get(step.step_type.value, STEP_COLORS["service_call"])
-            nodes.append({
-                "id": node_id,
-                "label": step.name[:25],
-                "group": step.step_type.value,
-                "color": {
-                    "background": color["bg"],
-                    "border": color["border"],
-                    "highlight": {"background": "#fff", "border": color["border"]},
-                },
-                "shape": "box",
-                "font": {"size": 11, "color": "#c9d1d9", "strokeWidth": 2, "strokeColor": "#0d1117"},
-                " borderWidth": 2,
-                "title": (
-                    f"{step.name}\n"
-                    f"Type: {step.step_type.value}\n"
-                    f"File: {step.file}:{step.line}\n"
-                    f"Confidence: {step.confidence:.0%}\n"
-                    f"Journey: {journey.name}"
-                ),
-                "level": i,
-                "stepType": step.step_type.value,
-            })
+            nodes.append(
+                {
+                    "id": node_id,
+                    "label": step.name[:25],
+                    "group": step.step_type.value,
+                    "color": {
+                        "background": color["bg"],
+                        "border": color["border"],
+                        "highlight": {"background": "#fff", "border": color["border"]},
+                    },
+                    "shape": "box",
+                    "font": {
+                        "size": 11,
+                        "color": "#c9d1d9",
+                        "strokeWidth": 2,
+                        "strokeColor": "#0d1117",
+                    },
+                    " borderWidth": 2,
+                    "title": (
+                        f"{step.name}\n"
+                        f"Type: {step.step_type.value}\n"
+                        f"File: {step.file}:{step.line}\n"
+                        f"Confidence: {step.confidence:.0%}\n"
+                        f"Journey: {journey.name}"
+                    ),
+                    "level": i,
+                    "stepType": step.step_type.value,
+                }
+            )
 
             step_info[node_id] = {
                 "name": step.name,
@@ -87,25 +94,29 @@ def export_journeys_html(report: JourneyReport, output_path: Path) -> Path:
             if i > 0:
                 prev = journey.steps[i - 1]
                 prev_id = f"{_esc(journey.id)}__{prev.id}"
-                edges.append({
-                    "from": prev_id,
-                    "to": node_id,
-                    "label": prev.step_type.value,
-                    "color": {"color": "#30363d", "highlight": "#58a6ff"},
-                    "arrows": {"to": {"enabled": True, "scaleFactor": 0.4}},
-                    "smooth": {"type": "curvedCW", "roundness": 0.15},
-                })
+                edges.append(
+                    {
+                        "from": prev_id,
+                        "to": node_id,
+                        "label": prev.step_type.value,
+                        "color": {"color": "#30363d", "highlight": "#58a6ff"},
+                        "arrows": {"to": {"enabled": True, "scaleFactor": 0.4}},
+                        "smooth": {"type": "curvedCW", "roundness": 0.15},
+                    }
+                )
 
     # Journey summary for sidebar
     journey_list = []
     for j in report.journeys:
-        journey_list.append({
-            "id": j.id,
-            "name": j.name,
-            "feature": j.feature,
-            "confidence": j.confidence,
-            "stepCount": len(j.steps),
-        })
+        journey_list.append(
+            {
+                "id": j.id,
+                "name": j.name,
+                "feature": j.feature,
+                "confidence": j.confidence,
+                "stepCount": len(j.steps),
+            }
+        )
 
     # Summary stats
     summary = report.to_dict()["summary"]
