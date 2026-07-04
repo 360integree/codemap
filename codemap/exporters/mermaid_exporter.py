@@ -1,10 +1,9 @@
 """Export graph as Mermaid diagram."""
 
 from pathlib import Path
-from typing import Dict, List
 
 
-def export_mermaid(graph_data: Dict, output_path: Path) -> Path:
+def export_mermaid(graph_data: dict, output_path: Path) -> Path:
     """Export graph as Mermaid flowchart."""
     entities = {e["id"]: e for e in graph_data.get("entities", [])}
     relationships = graph_data.get("relationships", [])
@@ -32,7 +31,7 @@ def export_mermaid(graph_data: Dict, output_path: Path) -> Path:
         return node_map[name]
 
     # Group entities by file for subgraphs
-    file_groups: Dict[str, List[str]] = {}
+    file_groups: dict[str, list[str]] = {}
     for eid, ent in entities.items():
         f = ent.get("file", "unknown")
         parts = f.split("/")

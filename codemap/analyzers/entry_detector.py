@@ -10,7 +10,6 @@ Works across all languages and frameworks by detecting:
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 
 @dataclass
@@ -19,7 +18,7 @@ class Initialization:
     name: str
     line: int
     type: str  # database, auth, provider, router, logger, cache, etc.
-    config_refs: List[str] = field(default_factory=list)
+    config_refs: list[str] = field(default_factory=list)
     is_async: bool = False
 
 
@@ -30,11 +29,11 @@ class EntryPoint:
     line: int
     language: str
     entry_type: str  # main, server, app, cli, test, worker
-    initializations: List[Initialization] = field(default_factory=list)
-    initial_route: Optional[str] = None
-    home_screen: Optional[str] = None
-    exports: List[str] = field(default_factory=list)
-    metadata: Dict = field(default_factory=dict)
+    initializations: list[Initialization] = field(default_factory=list)
+    initial_route: str | None = None
+    home_screen: str | None = None
+    exports: list[str] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
 
 class EntryDetector:
@@ -180,7 +179,7 @@ class EntryDetector:
         ".php": "php",
     }
 
-    def detect_all(self, root: Path, files: List[Path]) -> List[EntryPoint]:
+    def detect_all(self, root: Path, files: list[Path]) -> list[EntryPoint]:
         """Detect all entry points in the project."""
         entry_points = []
 
@@ -203,7 +202,7 @@ class EntryDetector:
 
         return entry_points
 
-    def detect_file(self, file_path: Path) -> Optional[EntryPoint]:
+    def detect_file(self, file_path: Path) -> EntryPoint | None:
         """Detect entry point in a single file."""
         lang = self._detect_language(file_path)
         if not lang:
@@ -218,7 +217,7 @@ class EntryDetector:
         points = self._scan_content(content, file_path, lang, is_entry_file)
         return points[0] if points else None
 
-    def _detect_language(self, file_path: Path) -> Optional[str]:
+    def _detect_language(self, file_path: Path) -> str | None:
         """Detect language from file extension."""
         return self.EXTENSION_TO_LANG.get(file_path.suffix.lower())
 
@@ -230,7 +229,7 @@ class EntryDetector:
 
     def _scan_content(
         self, content: str, file_path: Path, language: str, is_entry_file: bool,
-    ) -> List[EntryPoint]:
+    ) -> list[EntryPoint]:
         """Scan file content for entry point patterns."""
         entry_points = []
         patterns = self.ENTRY_PATTERNS.get(language, [])
@@ -272,7 +271,7 @@ class EntryDetector:
 
         return entry_points
 
-    def _find_initializations(self, lines: List[str], start_line: int) -> List[Initialization]:
+    def _find_initializations(self, lines: list[str], start_line: int) -> list[Initialization]:
         """Find service initializations near an entry point."""
         inits = []
         # Look within 50 lines after entry point
@@ -295,7 +294,7 @@ class EntryDetector:
 
         return inits
 
-    def _find_framework_inits(self, lines: List[str], start_line: int) -> List[Initialization]:
+    def _find_framework_inits(self, lines: list[str], start_line: int) -> list[Initialization]:
         """Find framework-specific initializations."""
         inits = []
         search_range = min(start_line + 30, len(lines))
@@ -314,7 +313,7 @@ class EntryDetector:
 
         return inits
 
-    def _find_initial_route(self, lines: List[str], start_line: int) -> Optional[Dict]:
+    def _find_initial_route(self, lines: list[str], start_line: int) -> dict | None:
         """Find initial route/home screen declaration."""
         search_range = min(start_line + 40, len(lines))
 
@@ -341,7 +340,7 @@ class EntryDetector:
 
         return None
 
-    def _extract_init_name(self, line: str, init_type: str) -> Optional[str]:
+    def _extract_init_name(self, line: str, init_type: str) -> str | None:
         """Extract the name of what's being initialized."""
         # Try to extract class/variable name
         patterns = [
@@ -355,7 +354,7 @@ class EntryDetector:
                 return m.group(1)
         return init_type
 
-    def _extract_config_refs(self, line: str) -> List[str]:
+    def _extract_config_refs(self, line: str) -> list[str]:
         """Extract configuration references from a line."""
         refs = []
         # Look for env vars
@@ -366,7 +365,7 @@ class EntryDetector:
         refs.extend(config_refs)
         return refs
 
-    def to_dict(self, entry_points: List[EntryPoint]) -> Dict:
+    def to_dict(self, entry_points: list[EntryPoint]) -> dict:
         """Serialize entry points to dict."""
         return {
             "entry_points": [
@@ -398,13 +397,13 @@ class EntryDetector:
             },
         }
 
-    def _count_by_type(self, entry_points: List[EntryPoint]) -> Dict[str, int]:
+    def _count_by_type(self, entry_points: list[EntryPoint]) -> dict[str, int]:
         counts = {}
         for ep in entry_points:
             counts[ep.entry_type] = counts.get(ep.entry_type, 0) + 1
         return counts
 
-    def _count_by_language(self, entry_points: List[EntryPoint]) -> Dict[str, int]:
+    def _count_by_language(self, entry_points: list[EntryPoint]) -> dict[str, int]:
         counts = {}
         for ep in entry_points:
             counts[ep.language] = counts.get(ep.language, 0) + 1

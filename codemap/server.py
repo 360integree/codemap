@@ -8,7 +8,6 @@ Usage:
     python -m codemap mcp --help   # Show server options
 """
 import json
-import sys
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -41,7 +40,7 @@ def _load_graph(path: str) -> dict | None:
     if not graph_file.exists():
         return None
 
-    with open(graph_file, "r") as f:
+    with open(graph_file) as f:
         data = json.load(f)
     _graph_cache[path] = data
     return data
@@ -53,7 +52,7 @@ def _load_behavioral(path: str) -> dict | None:
     bh_file = out / "behavioral_analysis.json"
     if not bh_file.exists():
         return None
-    with open(bh_file, "r") as f:
+    with open(bh_file) as f:
         return json.load(f)
 
 
@@ -72,7 +71,7 @@ def codemap_scan(path: str, refresh: bool = False, behavioral: bool = False) -> 
         refresh: Force re-scan even if cache exists.
         behavioral: Also run behavioral analysis (dead code, state flow).
     """
-    from codemap.cli import run_pipeline, run_behavioral_analysis_pipeline
+    from codemap.cli import run_behavioral_analysis_pipeline, run_pipeline
 
     try:
         graph_data = run_pipeline(

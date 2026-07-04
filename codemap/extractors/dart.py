@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import List, Set
 
 from codemap.extractors.base import BaseExtractor, Entity, ExtractionResult, Relationship
 
@@ -241,7 +240,7 @@ class DartExtractor(BaseExtractor):
                 return str(resolved)
         return None
 
-    def _parse_list(self, s: str) -> List[str]:
+    def _parse_list(self, s: str) -> list[str]:
         """Parse comma-separated list of identifiers."""
         if not s:
             return []

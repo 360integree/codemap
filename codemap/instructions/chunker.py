@@ -10,7 +10,6 @@ Instead of naively splitting by lines or paragraphs, this chunker:
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
 
 
 @dataclass
@@ -22,9 +21,9 @@ class InstructionChunk:
     line_end: int
     heading: str  # Nearest heading above this chunk
     heading_level: int  # 1-6 for # through ######
-    topics: Set[str] = field(default_factory=set)
-    question_ids: Set[str] = field(default_factory=set)
-    scope_tags: Set[str] = field(default_factory=set)
+    topics: set[str] = field(default_factory=set)
+    question_ids: set[str] = field(default_factory=set)
+    scope_tags: set[str] = field(default_factory=set)
     word_count: int = 0
 
     def __post_init__(self):
@@ -72,7 +71,7 @@ class InstructionChunker:
         "turn_specific": re.compile(r"\b(turn\s*\d|turn\s*\d+[-+])\b", re.IGNORECASE),
     }
 
-    def chunk(self, text: str, source_file: str = "") -> List[InstructionChunk]:
+    def chunk(self, text: str, source_file: str = "") -> list[InstructionChunk]:
         """Split instruction text into semantic chunks.
 
         Strategy:
@@ -131,7 +130,7 @@ class InstructionChunker:
     def _split_section(
         self, text: str, base_line: int, source_file: str,
         heading: str, heading_level: int, start_index: int,
-    ) -> List[InstructionChunk]:
+    ) -> list[InstructionChunk]:
         """Split a section into sub-chunks if it's long enough."""
         lines = text.split("\n")
 

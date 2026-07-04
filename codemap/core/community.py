@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 try:
     import networkx as nx
@@ -10,7 +9,7 @@ except ImportError:
     nx = None
 
 
-def detect_communities(G: "nx.DiGraph") -> Dict[str, List[str]]:
+def detect_communities(G: "nx.DiGraph") -> dict[str, list[str]]:
     """Detect communities using Leiden algorithm (falls back to greedy modularity).
 
     Uses the undirected version of G for modularity-based algorithms since
@@ -23,8 +22,8 @@ def detect_communities(G: "nx.DiGraph") -> Dict[str, List[str]]:
 
     # --- Attempt 1: Leiden algorithm (best quality) ---
     try:
-        from leidenalg import find_partition, ModularityVertexPartition
         import igraph as ig
+        from leidenalg import ModularityVertexPartition, find_partition
         g = ig.Graph.from_networkx(G.to_undirected())
         partition = find_partition(g, ModularityVertexPartition)
         communities = defaultdict(list)
@@ -56,7 +55,7 @@ def detect_communities(G: "nx.DiGraph") -> Dict[str, List[str]]:
     return _path_based_communities(G)
 
 
-def _path_based_communities(G: "nx.DiGraph") -> Dict[str, List[str]]:
+def _path_based_communities(G: "nx.DiGraph") -> dict[str, list[str]]:
     """Group entities by their top-level directory/module path.
 
     This is the fallback for sparse or disconnected graphs where
@@ -84,15 +83,15 @@ def _path_based_communities(G: "nx.DiGraph") -> Dict[str, List[str]]:
     return {k: v for k, v in groups.items() if len(v) > 1}
 
 
-def _community_display_name(comm_id: str, members: List[str], G: "nx.DiGraph") -> str:
+def _community_display_name(comm_id: str, members: list[str], G: "nx.DiGraph") -> str:
     """Generate a human-readable name for a community based on its dominant file paths."""
     if not comm_id.startswith("community_"):
         # Path-based key like "packages/core" — use as-is
         return comm_id
 
     # For algorithmic communities, find the most common directory prefix
-    dir_counts: Dict[str, int] = defaultdict(int)
-    subdir_counts: Dict[str, int] = defaultdict(int)
+    dir_counts: dict[str, int] = defaultdict(int)
+    subdir_counts: dict[str, int] = defaultdict(int)
     for node in members:
         data = G.nodes.get(node, {})
         filepath = data.get("file", "")
@@ -137,9 +136,9 @@ def _get_module_key(filepath: str) -> str:
 
 def find_surprising_links(
     G: "nx.DiGraph",
-    entities: Dict,
+    entities: dict,
     min_path_length: int = 4,
-) -> List[Dict]:
+) -> list[dict]:
     """Find cross-module connections that are genuinely unexpected.
 
     In a monorepo, cross-*package* imports are normal (core → user_app).
@@ -197,7 +196,7 @@ def find_surprising_links(
     return surprising[:20]
 
 
-def find_god_nodes(G: "nx.DiGraph", top_n: int = 10) -> List[Dict]:
+def find_god_nodes(G: "nx.DiGraph", top_n: int = 10) -> list[dict]:
     """Find nodes with highest degree centrality."""
     degree = dict(G.degree())
     sorted_nodes = sorted(degree.items(), key=lambda x: x[1], reverse=True)[:top_n]
@@ -216,7 +215,7 @@ def find_god_nodes(G: "nx.DiGraph", top_n: int = 10) -> List[Dict]:
 
 def find_paths(
     G: "nx.DiGraph", source: str, target: str, max_length: int = 6
-) -> List[List[str]]:
+) -> list[list[str]]:
     """Find all paths between source and target up to max_length."""
     if source not in G or target not in G:
         return []
@@ -229,8 +228,8 @@ def find_paths(
 
 
 def get_entity_context(
-    entity_id: str, G: "nx.DiGraph", entities: Dict
-) -> Dict:
+    entity_id: str, G: "nx.DiGraph", entities: dict
+) -> dict:
     """Get full context for an entity."""
     if entity_id not in G:
         return {"error": f"Entity '{entity_id}' not found"}

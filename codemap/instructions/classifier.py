@@ -13,7 +13,6 @@ Each chunk gets classified into one or more intent types:
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Set
 
 from .chunker import InstructionChunk
 
@@ -33,7 +32,7 @@ class IntentType(str, Enum):
 class ClassifiedChunk:
     """An InstructionChunk with its classified intent."""
     chunk: InstructionChunk
-    intents: Set[IntentType] = field(default_factory=set)
+    intents: set[IntentType] = field(default_factory=set)
     primary_intent: IntentType = IntentType.UNKNOWN
     confidence: float = 0.0
     severity: str = "medium"  # low, medium, high, critical
@@ -178,12 +177,12 @@ class IntentClassifier:
             severity=severity,
         )
 
-    def classify_batch(self, chunks: List[InstructionChunk]) -> List[ClassifiedChunk]:
+    def classify_batch(self, chunks: list[InstructionChunk]) -> list[ClassifiedChunk]:
         """Classify a batch of chunks."""
         return [self.classify(chunk) for chunk in chunks]
 
     def _determine_severity(
-        self, text: str, intents: Set[IntentType], primary: IntentType,
+        self, text: str, intents: set[IntentType], primary: IntentType,
     ) -> str:
         """Determine severity based on intent combination and content."""
         # Critical: Constraint + Mandate in same chunk = potential contradiction

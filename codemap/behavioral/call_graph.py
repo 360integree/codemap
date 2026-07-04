@@ -13,10 +13,9 @@ The analysis is entirely language-agnostic — it operates on the graph structur
 """
 
 from collections import defaultdict, deque
-from typing import Dict, List, Set
 
 
-def analyze_call_graph(behavioral_data: Dict, graph_data: Dict) -> Dict:
+def analyze_call_graph(behavioral_data: dict, graph_data: dict) -> dict:
     """Analyze the call graph for dead code, hot paths, and call depth.
 
     Args:
@@ -30,8 +29,8 @@ def analyze_call_graph(behavioral_data: Dict, graph_data: Dict) -> Dict:
     entry_points = behavioral_data.get('entry_points', [])
 
     # ── Build adjacency list ──────────────────────────────────────────
-    adj: Dict[str, List[str]] = defaultdict(list)
-    all_nodes: Set[str] = set()
+    adj: dict[str, list[str]] = defaultdict(list)
+    all_nodes: set[str] = set()
 
     for caller, data in raw_cg.items():
         all_nodes.add(caller)
@@ -42,7 +41,7 @@ def analyze_call_graph(behavioral_data: Dict, graph_data: Dict) -> Dict:
             all_nodes.add(target)
 
     # ── 1. Dead code detection (BFS from entry points) ────────────────
-    reachable: Set[str] = set()
+    reachable: set[str] = set()
     queue: deque = deque()
 
     # Seed from entry points — match by file path prefix
@@ -95,7 +94,7 @@ def analyze_call_graph(behavioral_data: Dict, graph_data: Dict) -> Dict:
             })
 
     # ── 2. Hot path detection (in-degree ranking, project-local only) ─
-    in_degree: Dict[str, int] = defaultdict(int)
+    in_degree: dict[str, int] = defaultdict(int)
     for caller, targets in adj.items():
         for target in targets:
             in_degree[target] += 1
@@ -118,9 +117,9 @@ def analyze_call_graph(behavioral_data: Dict, graph_data: Dict) -> Dict:
             break
 
     # ── 3. Call depth analysis (longest chains, project-local only) ────
-    memo: Dict[str, int] = {}
+    memo: dict[str, int] = {}
 
-    def dfs_depth(node: str, visited: Set[str]) -> int:
+    def dfs_depth(node: str, visited: set[str]) -> int:
         if node in memo:
             return memo[node]
         if node in visited:

@@ -2,8 +2,6 @@
 
 import re
 from collections import defaultdict
-from pathlib import Path
-from typing import Dict, List, Set
 
 from codemap.extractors.base import Entity, Relationship
 
@@ -18,7 +16,7 @@ class LayerViolationAnalyzer:
         "database": re.compile(r"database|db|drift|sqlite|supabase", re.I),
     }
 
-    def analyze(self, entities: Dict[str, Entity], relationships: List[Relationship]) -> List[Dict]:
+    def analyze(self, entities: dict[str, Entity], relationships: list[Relationship]) -> list[dict]:
         violations = []
         for rel in relationships:
             if rel.type != "imports":
@@ -55,8 +53,7 @@ class LayerViolationAnalyzer:
 class CircularDependencyAnalyzer:
     """Detect circular dependencies in the import graph."""
 
-    def analyze(self, relationships: List[Relationship]) -> List[Dict]:
-        from collections import defaultdict
+    def analyze(self, relationships: list[Relationship]) -> list[dict]:
         import networkx as nx
 
         G = nx.DiGraph()
@@ -82,7 +79,7 @@ class CircularDependencyAnalyzer:
 class NamingConventionAnalyzer:
     """Check naming convention consistency."""
 
-    def analyze(self, entities: Dict[str, Entity]) -> Dict:
+    def analyze(self, entities: dict[str, Entity]) -> dict:
         issues = defaultdict(list)
 
         for eid, entity in entities.items():

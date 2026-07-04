@@ -8,12 +8,9 @@ Works across all languages and frameworks by detecting:
 - API endpoints and base URLs
 """
 
-import json
-import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 
 @dataclass
@@ -23,25 +20,25 @@ class ConfigItem:
     type: str  # env_var, config_file, feature_flag, constant, api_url, secret
     file: str
     line: int
-    value: Optional[str] = None
-    default_value: Optional[str] = None
-    used_by: List[str] = field(default_factory=list)
+    value: str | None = None
+    default_value: str | None = None
+    used_by: list[str] = field(default_factory=list)
     is_secret: bool = False
-    description: Optional[str] = None
-    metadata: Dict = field(default_factory=dict)
+    description: str | None = None
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
 class ConfigReport:
     """Complete configuration analysis report."""
-    env_vars: List[ConfigItem] = field(default_factory=list)
-    config_files: List[ConfigItem] = field(default_factory=list)
-    feature_flags: List[ConfigItem] = field(default_factory=list)
-    constants: List[ConfigItem] = field(default_factory=list)
-    api_urls: List[ConfigItem] = field(default_factory=list)
-    secrets: List[ConfigItem] = field(default_factory=list)
+    env_vars: list[ConfigItem] = field(default_factory=list)
+    config_files: list[ConfigItem] = field(default_factory=list)
+    feature_flags: list[ConfigItem] = field(default_factory=list)
+    constants: list[ConfigItem] = field(default_factory=list)
+    api_urls: list[ConfigItem] = field(default_factory=list)
+    secrets: list[ConfigItem] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "env_vars": [self._item_to_dict(i) for i in self.env_vars],
             "config_files": [self._item_to_dict(i) for i in self.config_files],
@@ -59,7 +56,7 @@ class ConfigReport:
             },
         }
 
-    def _item_to_dict(self, item: ConfigItem) -> Dict:
+    def _item_to_dict(self, item: ConfigItem) -> dict:
         return {
             "name": item.name,
             "type": item.type,
@@ -198,7 +195,7 @@ class ConfigScanner:
         ".php": "php",
     }
 
-    def scan_all(self, root: Path, files: List[Path]) -> ConfigReport:
+    def scan_all(self, root: Path, files: list[Path]) -> ConfigReport:
         """Scan all files for configuration items."""
         report = ConfigReport()
 
@@ -230,7 +227,7 @@ class ConfigScanner:
 
         return report
 
-    def scan_file(self, file_path: Path) -> List[ConfigItem]:
+    def scan_file(self, file_path: Path) -> list[ConfigItem]:
         """Scan a single file for configuration items."""
         lang = self.EXTENSION_TO_LANG.get(file_path.suffix.lower())
         if not lang:
@@ -243,7 +240,7 @@ class ConfigScanner:
 
         return self._scan_content(content, str(file_path), lang)
 
-    def _find_config_files(self, root: Path, files: List[Path]) -> List[Path]:
+    def _find_config_files(self, root: Path, files: list[Path]) -> list[Path]:
         """Find configuration files in the project."""
         config_files = []
 
@@ -261,7 +258,7 @@ class ConfigScanner:
 
         return sorted(set(config_files))
 
-    def _scan_content(self, content: str, file_str: str, language: str) -> List[ConfigItem]:
+    def _scan_content(self, content: str, file_str: str, language: str) -> list[ConfigItem]:
         """Scan file content for configuration items."""
         items = []
         lines = content.split("\n")
@@ -339,7 +336,7 @@ class ConfigScanner:
 
         return items
 
-    def _merge_items(self, report: ConfigReport, items: List[ConfigItem]):
+    def _merge_items(self, report: ConfigReport, items: list[ConfigItem]):
         """Merge scanned items into report, avoiding duplicates."""
         seen = set()
 

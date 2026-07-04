@@ -13,7 +13,6 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-
 # Map: language name -> (detector function, extractor runner)
 DETECTORS = {}
 
@@ -69,7 +68,7 @@ DETECTORS["dart"] = (_detect_dart, _run_dart_extractor)
 # DETECTORS["javascript"] = (_detect_js, _run_js_extractor)
 
 
-def detect_language(root: Path) -> Optional[str]:
+def detect_language(root: Path) -> str | None:
     """Detect the project language and return the matching extractor name."""
     for lang, (detector, _) in DETECTORS.items():
         if detector(root):

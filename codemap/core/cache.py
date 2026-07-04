@@ -3,7 +3,6 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, Optional
 
 
 def file_hash(path: Path) -> str:
@@ -15,7 +14,7 @@ def file_hash(path: Path) -> str:
     return h.hexdigest()
 
 
-def load_cache(cache_dir: Path) -> Dict[str, str]:
+def load_cache(cache_dir: Path) -> dict[str, str]:
     """Load file hash cache."""
     cache_file = cache_dir / "file_hashes.json"
     if cache_file.exists():
@@ -24,7 +23,7 @@ def load_cache(cache_dir: Path) -> Dict[str, str]:
     return {}
 
 
-def save_cache(cache_dir: Path, hashes: Dict[str, str]) -> None:
+def save_cache(cache_dir: Path, hashes: dict[str, str]) -> None:
     """Save file hash cache."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file = cache_dir / "file_hashes.json"
@@ -34,7 +33,7 @@ def save_cache(cache_dir: Path, hashes: Dict[str, str]) -> None:
 
 def get_changed_files(
     files: list[Path], cache_dir: Path, root: Path
-) -> tuple[list[Path], Dict[str, str]]:
+) -> tuple[list[Path], dict[str, str]]:
     """Compare file hashes to find changed files. Returns (changed, new_hashes)."""
     old_hashes = load_cache(cache_dir)
     new_hashes = {}
@@ -50,7 +49,7 @@ def get_changed_files(
     return changed, new_hashes
 
 
-def get_cached_graph(output_dir: Path) -> Optional[dict]:
+def get_cached_graph(output_dir: Path) -> dict | None:
     """Load cached graph.json if it exists."""
     graph_file = output_dir / "graph.json"
     if graph_file.exists():

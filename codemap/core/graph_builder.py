@@ -1,8 +1,6 @@
 """NetworkX graph construction from extracted entities and relationships."""
 
 from collections import defaultdict
-from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 try:
     import networkx as nx
@@ -16,10 +14,10 @@ class GraphBuilder:
     """Build a NetworkX graph from extraction results."""
 
     def __init__(self):
-        self.entities: Dict[str, Entity] = {}
-        self.relationships: List[Relationship] = []
-        self.entity_files: Dict[str, Set[str]] = defaultdict(set)
-        self.entity_degree: Dict[str, int] = defaultdict(int)
+        self.entities: dict[str, Entity] = {}
+        self.relationships: list[Relationship] = []
+        self.entity_files: dict[str, set[str]] = defaultdict(set)
+        self.entity_degree: dict[str, int] = defaultdict(int)
 
     def add_result(self, result: ExtractionResult) -> None:
         """Add an extraction result to the graph."""
@@ -65,7 +63,7 @@ class GraphBuilder:
 
         return G
 
-    def get_god_nodes(self, top_n: int = 10) -> List[Dict]:
+    def get_god_nodes(self, top_n: int = 10) -> list[dict]:
         """Find entities with highest degree centrality."""
         if not self.entity_degree:
             return []
@@ -87,7 +85,7 @@ class GraphBuilder:
                 })
         return result
 
-    def get_clusters(self, G: "nx.DiGraph") -> List[Dict]:
+    def get_clusters(self, G: "nx.DiGraph") -> list[dict]:
         """Get file-based clusters from the graph."""
         clusters = defaultdict(lambda: {"members": [], "description": ""})
 
@@ -113,7 +111,7 @@ class GraphBuilder:
             })
         return result
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get graph statistics."""
         confidence_counts = defaultdict(int)
         type_counts = defaultdict(int)
@@ -134,8 +132,8 @@ class GraphBuilder:
             "confidence": dict(confidence_counts),
         }
 
-    def to_dict(self, project_info: Dict, clusters: List[Dict],
-                god_nodes: List[Dict], surprising_links: List[Dict]) -> Dict:
+    def to_dict(self, project_info: dict, clusters: list[dict],
+                god_nodes: list[dict], surprising_links: list[dict]) -> dict:
         """Convert graph to serializable dict."""
         return {
             "project": project_info,

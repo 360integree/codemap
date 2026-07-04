@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Optional
 
 try:
     import yaml
@@ -10,7 +9,7 @@ except ImportError:
     yaml = None
 
 
-def parse_config(file_path: Path) -> Optional[Dict]:
+def parse_config(file_path: Path) -> dict | None:
     """Parse a config file and return metadata."""
     if file_path.name == "pubspec.yaml":
         return _parse_pubspec(file_path)
@@ -21,7 +20,7 @@ def parse_config(file_path: Path) -> Optional[Dict]:
     return None
 
 
-def _parse_pubspec(file_path: Path) -> Optional[Dict]:
+def _parse_pubspec(file_path: Path) -> dict | None:
     if yaml is None:
         return None
     try:
@@ -43,7 +42,7 @@ def _parse_pubspec(file_path: Path) -> Optional[Dict]:
         return None
 
 
-def _parse_package_json(file_path: Path) -> Optional[Dict]:
+def _parse_package_json(file_path: Path) -> dict | None:
     try:
         with open(file_path) as f:
             data = json.load(f)
@@ -62,7 +61,7 @@ def _parse_package_json(file_path: Path) -> Optional[Dict]:
         return None
 
 
-def _parse_pyproject(file_path: Path) -> Optional[Dict]:
+def _parse_pyproject(file_path: Path) -> dict | None:
     try:
         content = file_path.read_text()
         # Simple TOML-like parsing for [project] section

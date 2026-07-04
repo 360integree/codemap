@@ -2,20 +2,40 @@
 
 **Knowledge graph generator for codebases.**
 
+[![PyPI version](https://badge.fury.io/py/codemap.svg)](https://pypi.org/project/codemap/)
+[![Tests](https://github.com/360integree/codemap/actions/workflows/tests.yml/badge.svg)](https://github.com/360integree/codemap/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
 Turns any folder of code, docs, and configs into a queryable knowledge graph. Understand your codebase structure, dependencies, dead code, state mutations, and architectural patterns — all from a single CLI command.
 
 ## Quick Start
 
-```bash
-git clone https://github.com/user/codemap.git
-cd codemap
-pip install -r requirements.txt
+### Install from PyPI
 
-# Scan a project
+```bash
+pip install codemap
+```
+
+### Or install from source
+
+```bash
+git clone https://github.com/360integree/codemap.git
+cd codemap
+pip install -e ".[full]"
+```
+
+### Scan a project
+
+```bash
+# Basic structural analysis
+codemap /path/to/your/project
+
+# Or with Python module syntax
 python -m codemap /path/to/your/project
 
 # With behavioral analysis (dead code, state flow, call graphs)
-python -m codemap /path/to/your/project --behavioral
+codemap /path/to/your/project --behavioral
 ```
 
 ## What It Does
@@ -43,19 +63,19 @@ python -m codemap /path/to/your/project --behavioral
 ## CLI Reference
 
 ```bash
-python -m codemap <path>                    # Full pipeline
-python -m codemap <path> --refresh          # Force re-scan (ignore cache)
-python -m codemap <path> --behavioral       # Include behavioral analysis
-python -m codemap <path> --report           # Output only the Markdown report
-python -m codemap <path> --json             # Output only graph.json
-python -m codemap <path> --html             # Output only interactive HTML
-python -m codemap <path> --mermaid          # Output only Mermaid diagram
-python -m codemap <path> --query <entity>   # Query a specific entity
-python -m codemap <path> --path A B         # Find path between entities
-python -m codemap <path> --analyze-prompts  # Analyze instruction files
-python -m codemap <path> --runtime-analysis # Runtime comprehension
-python -m codemap <path> --scan-dirs lib    # Scan specific directories
-python -m codemap <path> --ignore dist build  # Ignore patterns
+codemap <path>                    # Full pipeline
+codemap <path> --refresh          # Force re-scan (ignore cache)
+codemap <path> --behavioral       # Include behavioral analysis
+codemap <path> --report           # Output only the Markdown report
+codemap <path> --json             # Output only graph.json
+codemap <path> --html             # Output only interactive HTML
+codemap <path> --mermaid          # Output only Mermaid diagram
+codemap <path> --query <entity>   # Query a specific entity
+codemap <path> --path A B         # Find path between entities
+codemap <path> --analyze-prompts  # Analyze instruction files
+codemap <path> --runtime-analysis # Runtime comprehension
+codemap <path> --scan-dirs lib    # Scan specific directories
+codemap <path> --ignore dist build  # Ignore patterns
 ```
 
 ## Output
@@ -111,7 +131,7 @@ Codemap includes an MCP server that AI agents in IDEs can call natively.
 
 ```bash
 # Start the MCP server
-python -m codemap mcp
+codemap mcp
 ```
 
 ### IDE Configuration
@@ -121,9 +141,8 @@ python -m codemap mcp
 {
   "mcpServers": {
     "codemap": {
-      "command": "python3",
-      "args": ["-m", "codemap", "mcp"],
-      "cwd": "/path/to/codemap"
+      "command": "codemap",
+      "args": ["mcp"]
     }
   }
 }
@@ -134,27 +153,8 @@ python -m codemap mcp
 {
   "mcpServers": {
     "codemap": {
-      "command": "python3",
-      "args": ["-m", "codemap", "mcp"],
-      "cwd": "/path/to/codemap"
-    }
-  }
-}
-```
-
-**ZCode** — add to `~/.zcode/cli/config.json` under `mcp.servers`:
-```json
-{
-  "mcp": {
-    "servers": {
-      "codemap": {
-        "type": "stdio",
-        "command": "/path/to/codemap/.venv/bin/python3",
-        "args": ["-m", "codemap", "mcp"],
-        "env": {
-          "PYTHONPATH": "/path/to/codemap"
-        }
-      }
+      "command": "codemap",
+      "args": ["mcp"]
     }
   }
 }
@@ -165,9 +165,8 @@ python -m codemap mcp
 {
   "mcpServers": {
     "codemap": {
-      "command": "python3",
-      "args": ["-m", "codemap", "mcp"],
-      "cwd": "/path/to/codemap"
+      "command": "codemap",
+      "args": ["mcp"]
     }
   }
 }
@@ -186,15 +185,30 @@ python -m codemap mcp
 | `codemap_listeners` | Unpaired listener warnings (memory leaks) |
 | `codemap_god_nodes` | Most-connected modules (architectural bottlenecks) |
 
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+### Quick Start (Development)
+
+```bash
+git clone https://github.com/360integree/codemap.git
+cd codemap
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,full]"
+pytest
+```
+
 ## Dependencies
 
 - Python 3.10+
 - networkx ≥ 3.0
+- pyyaml ≥ 6.0
 - leidenalg ≥ 0.10.0 (optional, falls back to greedy modularity)
-- pyyaml ≥ 6.0 (optional, for config parsing)
 - mcp ≥ 1.0.0 (for MCP server / IDE integration)
 - Dart SDK (only for Dart behavioral analysis)
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.

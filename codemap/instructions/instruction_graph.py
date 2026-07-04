@@ -4,13 +4,11 @@ Orchestrates: Chunking → Classification → Overlap Detection → Graph Constr
 Outputs a structured instruction_graph that integrates with the main graph.json.
 """
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
-from .chunker import InstructionChunk, InstructionChunker
-from .classifier import ClassifiedChunk, IntentClassifier, IntentType
+from .chunker import InstructionChunker
+from .classifier import ClassifiedChunk, IntentClassifier
 from .overlap_detector import OverlapDetector, Redundancy, RedundancyCluster
 from .prompt_extractor import PromptExtractor
 
@@ -19,12 +17,12 @@ from .prompt_extractor import PromptExtractor
 class InstructionGraph:
     """The complete instruction analysis result."""
     source_file: str
-    chunks: List[ClassifiedChunk] = field(default_factory=list)
-    redundancies: List[Redundancy] = field(default_factory=list)
-    clusters: List[RedundancyCluster] = field(default_factory=list)
-    summary: Dict = field(default_factory=dict)
+    chunks: list[ClassifiedChunk] = field(default_factory=list)
+    redundancies: list[Redundancy] = field(default_factory=list)
+    clusters: list[RedundancyCluster] = field(default_factory=list)
+    summary: dict = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Serialize to dict for JSON export."""
         return {
             "source_file": self.source_file,
@@ -83,7 +81,7 @@ class InstructionGraphBuilder:
         self.classifier = IntentClassifier()
         self.detector = OverlapDetector()
 
-    def analyze_file(self, file_path: Path) -> Optional[InstructionGraph]:
+    def analyze_file(self, file_path: Path) -> InstructionGraph | None:
         """Analyze a single file for instruction redundancies."""
         # Extract text
         text = self.extractor.extract(file_path)
@@ -112,7 +110,7 @@ class InstructionGraphBuilder:
             summary=summary,
         )
 
-    def analyze_files(self, file_paths: List[Path]) -> List[InstructionGraph]:
+    def analyze_files(self, file_paths: list[Path]) -> list[InstructionGraph]:
         """Analyze multiple files."""
         results = []
         for fp in file_paths:
@@ -121,7 +119,7 @@ class InstructionGraphBuilder:
                 results.append(graph)
         return results
 
-    def analyze_text(self, text: str, source_name: str = "inline") -> Optional[InstructionGraph]:
+    def analyze_text(self, text: str, source_name: str = "inline") -> InstructionGraph | None:
         """Analyze raw text content (for inline prompt strings)."""
         if not text or len(text) < 100:
             return None
@@ -144,10 +142,10 @@ class InstructionGraphBuilder:
 
     def _build_summary(
         self, source_file: str,
-        chunks: List[ClassifiedChunk],
-        redundancies: List[Redundancy],
-        clusters: List[RedundancyCluster],
-    ) -> Dict:
+        chunks: list[ClassifiedChunk],
+        redundancies: list[Redundancy],
+        clusters: list[RedundancyCluster],
+    ) -> dict:
         """Build a summary of the analysis."""
         total_chunks = len(chunks)
         total_words = sum(cc.chunk.word_count for cc in chunks)

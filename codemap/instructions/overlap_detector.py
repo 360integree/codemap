@@ -9,9 +9,7 @@ Three detection strategies:
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
 
-from .chunker import InstructionChunk
 from .classifier import ClassifiedChunk, IntentType
 
 
@@ -22,13 +20,13 @@ class Redundancy:
     chunk_b_id: str
     type: str  # topic_collision, scope_conflict, semantic_duplicate, contradiction
     severity: str  # low, medium, high, critical
-    shared_topics: Set[str] = field(default_factory=set)
+    shared_topics: set[str] = field(default_factory=set)
     evidence: str = ""
     recommendation: str = ""
     similarity_score: float = 0.0
 
     @property
-    def key(self) -> Tuple[str, str, str]:
+    def key(self) -> tuple[str, str, str]:
         """Unique key for deduplication."""
         ids = sorted([self.chunk_a_id, self.chunk_b_id])
         return (ids[0], ids[1], self.type)
@@ -38,7 +36,7 @@ class Redundancy:
 class RedundancyCluster:
     """A group of chunks that are all redundant with each other."""
     id: str
-    chunk_ids: Set[str] = field(default_factory=set)
+    chunk_ids: set[str] = field(default_factory=set)
     topic: str = ""
     avg_similarity: float = 0.0
     severity: str = "medium"
@@ -54,8 +52,8 @@ class OverlapDetector:
     HIGH_SIMILARITY_THRESHOLD = 0.80  # High similarity threshold
 
     def detect_all(
-        self, classified_chunks: List[ClassifiedChunk],
-    ) -> Tuple[List[Redundancy], List[RedundancyCluster]]:
+        self, classified_chunks: list[ClassifiedChunk],
+    ) -> tuple[list[Redundancy], list[RedundancyCluster]]:
         """Run all detection strategies and return results."""
         redundancies = []
 
@@ -89,8 +87,8 @@ class OverlapDetector:
         return unique, clusters
 
     def _detect_topic_collisions(
-        self, chunks: List[ClassifiedChunk],
-    ) -> List[Redundancy]:
+        self, chunks: list[ClassifiedChunk],
+    ) -> list[Redundancy]:
         """Detect chunks with same topic + same intent = redundancy."""
         redundancies = []
 
@@ -130,8 +128,8 @@ class OverlapDetector:
         return redundancies
 
     def _detect_scope_conflicts(
-        self, chunks: List[ClassifiedChunk],
-    ) -> List[Redundancy]:
+        self, chunks: list[ClassifiedChunk],
+    ) -> list[Redundancy]:
         """Detect same mandate applied to different scopes = potential conflict."""
         redundancies = []
 
@@ -171,8 +169,8 @@ class OverlapDetector:
         return redundancies
 
     def _detect_semantic_duplicates(
-        self, chunks: List[ClassifiedChunk],
-    ) -> List[Redundancy]:
+        self, chunks: list[ClassifiedChunk],
+    ) -> list[Redundancy]:
         """Detect reworded duplicates using keyword-based similarity."""
         redundancies = []
 
@@ -213,8 +211,8 @@ class OverlapDetector:
         return redundancies
 
     def _detect_contradictions(
-        self, chunks: List[ClassifiedChunk],
-    ) -> List[Redundancy]:
+        self, chunks: list[ClassifiedChunk],
+    ) -> list[Redundancy]:
         """Detect instructions that contradict each other."""
         redundancies = []
 
@@ -287,7 +285,7 @@ class OverlapDetector:
             return "positive"
         return "neutral"
 
-    def _extract_keywords(self, text: str) -> Set[str]:
+    def _extract_keywords(self, text: str) -> set[str]:
         """Extract meaningful keywords from text for similarity comparison."""
         # Remove common stop words and short words
         stop_words = {
@@ -317,8 +315,8 @@ class OverlapDetector:
         return keywords
 
     def _cluster_redundancies(
-        self, redundancies: List[Redundancy], chunks: List[ClassifiedChunk],
-    ) -> List[RedundancyCluster]:
+        self, redundancies: list[Redundancy], chunks: list[ClassifiedChunk],
+    ) -> list[RedundancyCluster]:
         """Group redundancies into clusters of mutually redundant chunks."""
         if not redundancies:
             return []

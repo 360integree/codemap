@@ -5,11 +5,11 @@ from codemap.behavioral.call_graph import analyze_call_graph
 from codemap.behavioral.state_flow import analyze_state_flow
 
 
-def run_behavioral_analysis(graph_data: dict, behavioral_json_path: str) -> Dict:
+def run_behavioral_analysis(graph_data: dict, behavioral_json_path: str) -> dict:
     """Run all behavioral analyzers on extracted behavioral data."""
     import json
 
-    with open(behavioral_json_path, 'r') as f:
+    with open(behavioral_json_path) as f:
         data = json.load(f)
 
     results = {}

@@ -1,15 +1,14 @@
 """Export graph as interactive HTML using vis.js (full featured)."""
 
-from pathlib import Path
-from typing import Dict
 import json
+from pathlib import Path
 
 
 def _esc(s: str) -> str:
     return s.replace("/", "_").replace(".", "_").replace("-", "_").replace(" ", "_")
 
 
-def export_html(graph_data: Dict, output_path: Path) -> Path:
+def export_html(graph_data: dict, output_path: Path) -> Path:
     project = graph_data.get("project", {})
     stats = graph_data.get("metadata", {})
     title = f"{project.get('name', 'Project')} — Knowledge Graph"

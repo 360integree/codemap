@@ -1,22 +1,51 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
 *.egg-info/
+*.egg
 dist/
 build/
 .eggs/
+*.whl
+
+# Virtual environments
 .venv/
 venv/
+env/
 .env
-.DS_Store
+
+# IDEs
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Type checking
+.mypy_cache/
+
+# Codemap output (generated, not source)
+.codemap/
+.graphify/
 
 # Dart
 .dart_tool/
 pubspec.lock
 
-# Codemap output (generated, not source)
-.codemap/
-.graphify/
+# Distribution
+*.tar.gz
+*.whl

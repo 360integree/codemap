@@ -3,9 +3,9 @@ from pathlib import Path
 
 from codemap.extractors.base import BaseExtractor
 from codemap.extractors.dart import DartExtractor
-from codemap.extractors.python import PythonExtractor
-from codemap.extractors.js_ts import JsTsExtractor
 from codemap.extractors.generic import GenericExtractor
+from codemap.extractors.js_ts import JsTsExtractor
+from codemap.extractors.python import PythonExtractor
 
 EXTRACTORS = {
     ".dart": DartExtractor,

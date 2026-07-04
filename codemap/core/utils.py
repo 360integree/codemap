@@ -1,9 +1,7 @@
 """Shared utility functions for codemap."""
 
 import os
-import re
 from pathlib import Path
-from typing import List, Set
 
 
 def get_project_root(start: str = ".") -> Path:
@@ -20,7 +18,7 @@ def get_project_root(start: str = ".") -> Path:
     return p
 
 
-def should_ignore(path: Path, ignore_patterns: List[str], root: Path) -> bool:
+def should_ignore(path: Path, ignore_patterns: list[str], root: Path) -> bool:
     """Check if a path should be ignored."""
     rel = str(path.relative_to(root))
     default_ignores = {
@@ -42,9 +40,9 @@ def should_ignore(path: Path, ignore_patterns: List[str], root: Path) -> bool:
 
 def collect_files(
     root: Path,
-    scan_dirs: List[str] = None,
-    ignore_patterns: List[str] = None,
-) -> List[Path]:
+    scan_dirs: list[str] = None,
+    ignore_patterns: list[str] = None,
+) -> list[Path]:
     """Collect all source files in the project."""
     if ignore_patterns is None:
         ignore_patterns = []

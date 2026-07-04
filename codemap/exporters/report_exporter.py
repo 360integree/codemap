@@ -3,10 +3,9 @@
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
-def export_report(graph_data: Dict, output_path: Path) -> Path:
+def export_report(graph_data: dict, output_path: Path) -> Path:
     """Export GRAPH_REPORT.md."""
     project = graph_data.get("project", {})
     entities = graph_data.get("entities", [])

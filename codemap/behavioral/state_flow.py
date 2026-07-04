@@ -14,10 +14,9 @@ Language-specific extractors map their framework's concepts to this schema:
 """
 
 from collections import defaultdict
-from typing import Dict, List
 
 
-def analyze_state_flow(behavioral_data: Dict) -> Dict:
+def analyze_state_flow(behavioral_data: dict) -> dict:
     """Analyze state mutation patterns and component lifecycle health.
 
     Args:
@@ -33,7 +32,7 @@ def analyze_state_flow(behavioral_data: Dict) -> Dict:
     state_containers = behavioral_data.get('change_notifiers', [])
 
     # ── 1. Mutation hotspots (classes/files with most mutations) ───────
-    class_mutations: Dict[str, Dict] = defaultdict(lambda: {
+    class_mutations: dict[str, dict] = defaultdict(lambda: {
         'count': 0, 'types': defaultdict(int), 'file': '', 'methods': set()
     })
 
@@ -81,8 +80,8 @@ def analyze_state_flow(behavioral_data: Dict) -> Dict:
         })
 
     # ── 2. Unpaired listeners (memory leak detection) ─────────────────
-    add_by_class: Dict[str, List[Dict]] = defaultdict(list)
-    remove_by_class: Dict[str, List[Dict]] = defaultdict(list)
+    add_by_class: dict[str, list[dict]] = defaultdict(list)
+    remove_by_class: dict[str, list[dict]] = defaultdict(list)
 
     for m in mutations:
         cls = m.get('enclosing_class', '') or m.get('enclosing_method', '') or 'unknown'

@@ -11,7 +11,6 @@ Works across all languages and frameworks by detecting:
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 
 @dataclass
@@ -20,9 +19,9 @@ class TestFile:
     file: str
     test_framework: str
     test_count: int
-    tested_modules: List[str] = field(default_factory=list)
-    patterns: List[str] = field(default_factory=list)
-    metadata: Dict = field(default_factory=dict)
+    tested_modules: list[str] = field(default_factory=list)
+    patterns: list[str] = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -30,7 +29,7 @@ class ModuleCoverage:
     """Coverage information for a source module."""
     source_file: str
     has_test: bool
-    test_file: Optional[str] = None
+    test_file: str | None = None
     test_count: int = 0
     coverage_estimate: str = "unknown"  # none, low, medium, high, full
     risk_level: str = "unknown"  # low, medium, high, critical
@@ -39,11 +38,11 @@ class ModuleCoverage:
 @dataclass
 class TestCoverageReport:
     """Complete test coverage analysis report."""
-    test_files: List[TestFile] = field(default_factory=list)
-    module_coverage: List[ModuleCoverage] = field(default_factory=list)
-    untested_modules: List[str] = field(default_factory=list)
+    test_files: list[TestFile] = field(default_factory=list)
+    module_coverage: list[ModuleCoverage] = field(default_factory=list)
+    untested_modules: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "test_files": [
                 {
@@ -227,7 +226,7 @@ class TestCoverageScanner:
         ".php": "php",
     }
 
-    def scan_all(self, root: Path, files: List[Path]) -> TestCoverageReport:
+    def scan_all(self, root: Path, files: list[Path]) -> TestCoverageReport:
         """Scan all files for test coverage."""
         report = TestCoverageReport()
 
@@ -267,7 +266,7 @@ class TestCoverageScanner:
 
         return report
 
-    def _analyze_test_file(self, file_path: Path, language: str) -> Optional[TestFile]:
+    def _analyze_test_file(self, file_path: Path, language: str) -> TestFile | None:
         """Analyze a single test file."""
         try:
             content = file_path.read_text(encoding="utf-8", errors="replace")
@@ -309,7 +308,7 @@ class TestCoverageScanner:
             metadata={"language": language, "line_count": content.count("\n") + 1},
         )
 
-    def _find_tested_modules(self, content: str, language: str) -> List[str]:
+    def _find_tested_modules(self, content: str, language: str) -> list[str]:
         """Find which modules a test file tests."""
         modules = []
 
@@ -355,7 +354,7 @@ class TestCoverageScanner:
 
     def _map_coverage(
         self, source_file: Path, language: str,
-        test_files: List[TestFile], root: Path,
+        test_files: list[TestFile], root: Path,
     ) -> ModuleCoverage:
         """Map source file to its test coverage."""
         source_name = source_file.stem  # e.g., "user_repository"

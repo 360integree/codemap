@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -13,7 +12,7 @@ class Entity:
     name: str
     file: str
     line: int = 0
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -28,10 +27,10 @@ class Relationship:
 
 @dataclass
 class ExtractionResult:
-    entities: List[Entity] = field(default_factory=list)
-    relationships: List[Relationship] = field(default_factory=list)
-    imports: List[str] = field(default_factory=list)
-    exports: List[str] = field(default_factory=list)
+    entities: list[Entity] = field(default_factory=list)
+    relationships: list[Relationship] = field(default_factory=list)
+    imports: list[str] = field(default_factory=list)
+    exports: list[str] = field(default_factory=list)
 
 
 class BaseExtractor(ABC):

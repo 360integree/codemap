@@ -9,27 +9,25 @@ Works across all languages and frameworks by detecting:
 - Comment/documentation patterns
 """
 
-import os
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 
 @dataclass
 class ConventionReport:
     """Complete convention analysis report."""
-    file_naming: Dict = field(default_factory=dict)
-    class_naming: Dict = field(default_factory=dict)
-    directory_structure: Dict = field(default_factory=dict)
-    import_style: Dict = field(default_factory=dict)
-    error_handling: Dict = field(default_factory=dict)
-    comment_style: Dict = field(default_factory=dict)
-    detected_frameworks: List[str] = field(default_factory=list)
-    detected_architecture: Optional[str] = None
+    file_naming: dict = field(default_factory=dict)
+    class_naming: dict = field(default_factory=dict)
+    directory_structure: dict = field(default_factory=dict)
+    import_style: dict = field(default_factory=dict)
+    error_handling: dict = field(default_factory=dict)
+    comment_style: dict = field(default_factory=dict)
+    detected_frameworks: list[str] = field(default_factory=list)
+    detected_architecture: str | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "file_naming": self.file_naming,
             "class_naming": self.class_naming,
@@ -165,7 +163,7 @@ class ConventionDetector:
         ".php": "php",
     }
 
-    def detect_all(self, root: Path, files: List[Path]) -> ConventionReport:
+    def detect_all(self, root: Path, files: list[Path]) -> ConventionReport:
         """Detect all conventions in the project."""
         report = ConventionReport()
 
@@ -259,7 +257,7 @@ class ConventionDetector:
 
         return report
 
-    def _analyze_file_naming(self, file_names: List[tuple]) -> Dict:
+    def _analyze_file_naming(self, file_names: list[tuple]) -> dict:
         """Analyze file naming conventions."""
         counters = {
             "snake_case": 0,
@@ -294,7 +292,7 @@ class ConventionDetector:
             "total_files": sum(counters.values()),
         }
 
-    def _analyze_class_naming(self, class_names: List[tuple]) -> Dict:
+    def _analyze_class_naming(self, class_names: list[tuple]) -> dict:
         """Analyze class naming conventions."""
         counters = Counter()
         examples = defaultdict(list)
@@ -314,8 +312,8 @@ class ConventionDetector:
         }
 
     def _analyze_directory_structure(
-        self, depth_counts: Dict, root: Path, files: List[Path],
-    ) -> Dict:
+        self, depth_counts: dict, root: Path, files: list[Path],
+    ) -> dict:
         """Analyze directory structure patterns."""
         # Get top-level directories
         top_dirs = set()
@@ -357,8 +355,8 @@ class ConventionDetector:
         }
 
     def _detect_architecture(
-        self, dir_counts: Dict, class_names: List[tuple], frameworks: Set[str],
-    ) -> Optional[str]:
+        self, dir_counts: dict, class_names: list[tuple], frameworks: set[str],
+    ) -> str | None:
         """Detect architectural pattern."""
         all_dirs = " ".join(dir_counts.keys()).lower()
         all_classes = " ".join(name for name, _ in class_names).lower()

@@ -10,7 +10,6 @@ Handles:
 
 import re
 from pathlib import Path
-from typing import List, Optional
 
 
 class PromptExtractor:
@@ -57,7 +56,7 @@ class PromptExtractor:
     # Minimum chunk size to consider (avoids extracting tiny fragments)
     MIN_CHUNK_LENGTH = 50
 
-    def extract(self, file_path: Path) -> Optional[str]:
+    def extract(self, file_path: Path) -> str | None:
         """Extract instruction text from a file.
 
         Returns the full extractable text content, or None if no
@@ -90,7 +89,7 @@ class PromptExtractor:
 
         return None
 
-    def extract_chunks(self, file_path: Path) -> List[str]:
+    def extract_chunks(self, file_path: Path) -> list[str]:
         """Extract individual instruction text chunks from a file.
 
         Returns a list of separate text blocks found in the file.
@@ -117,44 +116,44 @@ class PromptExtractor:
 
         return []
 
-    def _extract_dart(self, content: str) -> Optional[str]:
+    def _extract_dart(self, content: str) -> str | None:
         """Extract instruction text from Dart triple-quoted strings."""
         matches = self.PATTERNS["dart_triple"].findall(content)
         # Filter out small matches (likely not instructions)
         texts = [m.strip("'").strip('"').strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return "\n\n".join(texts) if texts else None
 
-    def _extract_dart_chunks(self, content: str) -> List[str]:
+    def _extract_dart_chunks(self, content: str) -> list[str]:
         """Extract individual Dart string chunks."""
         matches = self.PATTERNS["dart_triple"].findall(content)
         texts = [m.strip("'").strip('"').strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return texts
 
-    def _extract_python(self, content: str) -> Optional[str]:
+    def _extract_python(self, content: str) -> str | None:
         """Extract instruction text from Python docstrings."""
         matches = self.PATTERNS["python_docstring"].findall(content)
         texts = [m.strip('"').strip("'").strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return "\n\n".join(texts) if texts else None
 
-    def _extract_python_chunks(self, content: str) -> List[str]:
+    def _extract_python_chunks(self, content: str) -> list[str]:
         """Extract individual Python docstring chunks."""
         matches = self.PATTERNS["python_docstring"].findall(content)
         texts = [m.strip('"').strip("'").strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return texts
 
-    def _extract_javascript(self, content: str) -> Optional[str]:
+    def _extract_javascript(self, content: str) -> str | None:
         """Extract instruction text from JS/TS template literals."""
         matches = self.PATTERNS["js_template"].findall(content)
         texts = [m.strip("`").strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return "\n\n".join(texts) if texts else None
 
-    def _extract_js_chunks(self, content: str) -> List[str]:
+    def _extract_js_chunks(self, content: str) -> list[str]:
         """Extract individual JS/TS template literal chunks."""
         matches = self.PATTERNS["js_template"].findall(content)
         texts = [m.strip("`").strip() for m in matches if len(m) > self.MIN_CHUNK_LENGTH]
         return texts
 
-    def _extract_yaml(self, content: str) -> Optional[str]:
+    def _extract_yaml(self, content: str) -> str | None:
         """Extract instruction text from YAML multiline strings."""
         matches = self.PATTERNS["yaml_multiline"].findall(content)
         texts = []
@@ -164,7 +163,7 @@ class PromptExtractor:
                 texts.append(cleaned)
         return "\n\n".join(texts) if texts else None
 
-    def _extract_json(self, content: str) -> Optional[str]:
+    def _extract_json(self, content: str) -> str | None:
         """Extract instruction text from JSON string values."""
         import json
         try:
@@ -176,7 +175,7 @@ class PromptExtractor:
         self._extract_json_strings(data, texts)
         return "\n\n".join(t for t in texts if len(t) > self.MIN_CHUNK_LENGTH) or None
 
-    def _extract_json_strings(self, obj, texts: List[str]):
+    def _extract_json_strings(self, obj, texts: list[str]):
         """Recursively extract string values from JSON."""
         if isinstance(obj, str) and len(obj) > self.MIN_CHUNK_LENGTH:
             texts.append(obj)
@@ -187,7 +186,7 @@ class PromptExtractor:
             for item in obj:
                 self._extract_json_strings(item, texts)
 
-    def _split_markdown(self, content: str) -> List[str]:
+    def _split_markdown(self, content: str) -> list[str]:
         """Split markdown content into meaningful chunks by headers."""
         chunks = []
         current_chunk = []
