@@ -49,3 +49,7 @@ pubspec.lock
 # Distribution
 *.tar.gz
 *.whl
+
+# Internal docs (not for public)
+docs/superpowers/
+USER_JOURNEY_DESIGN.md
