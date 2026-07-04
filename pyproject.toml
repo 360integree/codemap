@@ -24,7 +24,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Testing",
-    "Topic :: Software Development :: Code Generation",
 ]
 dependencies = [
     "networkx>=3.0",
