@@ -190,7 +190,6 @@ class PromptExtractor:
         """Split markdown content into meaningful chunks by headers."""
         chunks = []
         current_chunk = []
-        current_header = ""
 
         for line in content.split("\n"):
             if re.match(r"^#{1,3}\s+", line):
@@ -198,7 +197,6 @@ class PromptExtractor:
                     text = "\n".join(current_chunk).strip()
                     if len(text) > self.MIN_CHUNK_LENGTH:
                         chunks.append(text)
-                current_header = line
                 current_chunk = [line]
             else:
                 current_chunk.append(line)

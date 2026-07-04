@@ -49,7 +49,7 @@ from projetmap.extractors.config_parser import parse_config
 
 # Instruction Pipeline (v3)
 try:
-    from projetmap.instructions import InstructionGraphBuilder, PromptExtractor
+    from projetmap.instructions import InstructionGraphBuilder
     HAS_INSTRUCTION_PIPELINE = True
 except ImportError:
     HAS_INSTRUCTION_PIPELINE = False
@@ -1135,8 +1135,8 @@ def uninstall_skill():
 
 def uninstall():
     """Uninstall projetmap completely — skill, MCP configs, and pip package."""
-    import shutil
     import json
+    import shutil
     import subprocess
     import sys
 

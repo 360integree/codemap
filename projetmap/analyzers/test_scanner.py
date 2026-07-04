@@ -253,10 +253,6 @@ class TestCoverageScanner:
             if test_file:
                 report.test_files.append(test_file)
 
-        # Map source files to tests
-        source_strs = {str(f): lang for f, lang in source_files}
-        test_strs = {tf.file: tf for tf in report.test_files}
-
         for source_file, lang in source_files:
             coverage = self._map_coverage(source_file, lang, report.test_files, root)
             report.module_coverage.append(coverage)

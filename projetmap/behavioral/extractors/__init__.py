@@ -9,9 +9,7 @@ To add a new language:
 3. Register it in DETECTORS below
 """
 import subprocess
-import tempfile
 from pathlib import Path
-from typing import Optional
 
 # Map: language name -> (detector function, extractor runner)
 DETECTORS = {}
